@@ -1293,57 +1293,61 @@ function demoLogin() {
   saveLS(); loginSuccess();
 }
 
-/* ══ FIREBASE AUTH LISTENER ══ */
+/* ══ GESTION DE LA CONNEXION ══ */
+
+// Fonction unique pour gérer l'entrée dans l'app
+function handleAppAccess(user) {
+  S.user = user;
+  if (user && user.uid !== 'demo') {
+    S.prenom = S.prenom || user.displayName?.split(' ')[0] || 'Voyageur';
+  }
+  
+  // On cache l'auth et on affiche le main
+  $('screen-auth').classList.remove('active');
+  $('screen-main').classList.add('active');
+  
+  // On initialise l'affichage
+  updateTopbar();
+  openTab('bilan'); // Force l'affichage du premier onglet
+  toast("Bienvenue " + (S.prenom || "sur Aurora"));
+}
+
+// 1. Écouteur Firebase
 window.addEventListener('firebase-ready', () => {
   fbReady = true;
-  const {auth, onAuthStateChanged} = window._fb;
+  const { auth, onAuthStateChanged } = window._fb;
+  
   onAuthStateChanged(auth, user => {
-    // NE PAS interférer si on est déjà connecté (mode démo ou déjà loggué)
-    if (S.user) return;
-    if (user) {
-      S.user = user;
-      S.prenom = S.prenom || user.displayName?.split(' ')[0] || 'Vous';
-      loginSuccess();
+    if (user && !S.user) { // Si loggué via Firebase et pas encore en session
+      handleAppAccess(user);
     }
-    // Si pas d'utilisateur Firebase et pas de session démo → on reste sur l'écran auth (déjà actif par défaut)
   });
 });
 
-/* ══ BOUTON GOOGLE ══ */
+// 2. Bouton Google
 $('btn-google-signin').addEventListener('click', async () => {
-  if (!fbReady) {
-    // Firebase pas encore prêt → mode démo automatique
-    demoLogin();
-    return;
-  }
+  if (!fbReady) return toast("Connexion en cours...", "error");
+  
   const btn = $('btn-google-signin');
   btn.classList.add('loading');
-  btn.querySelector('svg').style.display = 'none';
+  
   try {
-    const {auth, GoogleAuthProvider, signInWithPopup} = window._fb;
+    const { auth, GoogleAuthProvider, signInWithPopup } = window._fb;
     const provider = new GoogleAuthProvider();
     await signInWithPopup(auth, provider);
-    // onAuthStateChanged prend le relais
   } catch(e) {
     btn.classList.remove('loading');
-    btn.querySelector('svg').style.display = '';
-    if (e.code !== 'auth/popup-closed-by-user') {
-      toast('Erreur connexion Google: ' + (e.message || e.code), 'error');
-    }
+    toast("Erreur : " + e.message, "error");
   }
 });
 
-/* ══ BOUTON DEMO ══ */
-$('btn-demo').addEventListener('click', demoLogin);
+// 3. Bouton Démo (Indépendant de Firebase)
+$('btn-demo').addEventListener('click', () => {
+  console.log("Mode démo activé");
+  demoLogin(); // Cette fonction remplit S avec les données fictives
+  handleAppAccess({uid: 'demo', displayName: 'Louise'});
+});
 
-/* ══ INIT ══ */
-loadLS();
-// Si une session démo était sauvegardée, on reprend directement
-if (S.user) {
-  loginSuccess();
-}
-bindUI();
 </script>
-
 </body>
 </html>
