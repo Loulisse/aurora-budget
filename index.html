@@ -1102,106 +1102,136 @@ function closeFab() {
 }
 
 /* ════════════════════════════════════════════
-   AUTH
+    AUTH - VERSION CORRIGÉE
 ════════════════════════════════════════════ */
-window.addEventListener('firebase-ready', ()=>{
-  fbReady=true;
-  const { auth, onAuthStateChanged } = window._fb;
-  onAuthStateChanged(auth, user=>{
-    if(user) {
-      S.user=user; S.prenom=S.prenom||user.displayName?.split(' ')[0]||'Vous';
-      loginSuccess();
-    } else {
-      showAuth();
-    }
-  });
+
+// Raccourci pour document.getElementById (essentiel pour le reste du code)
+const $ = id => document.getElementById(id);
+
+let fbReady = false;
+
+// 1. Initialisation Firebase
+window.addEventListener('firebase-ready', () => {
+    fbReady = true;
+    console.log("Firebase est prêt !");
+    const { auth, onAuthStateChanged } = window._fb;
+    
+    onAuthStateChanged(auth, user => {
+        if (user) {
+            S.user = user;
+            S.prenom = S.prenom || user.displayName?.split(' ')[0] || 'Vous';
+            window.loginSuccess();
+        } else {
+            window.showAuth();
+        }
+    });
 });
 
-// Fallback: if Firebase config not filled
-setTimeout(()=>{
-  if(!fbReady) {
-    // Firebase not configured — enable demo mode
-    $('btn-demo').textContent = '⚠️ Firebase non configuré — Mode démo';
-  }
+// 2. Sécurité : si Firebase met trop de temps (ex: problème de config ou domaine)
+setTimeout(() => {
+    if (!fbReady) {
+        console.warn("Firebase n'a pas répondu après 3s. Mode démo disponible.");
+        const btnDemo = $('btn-demo');
+        if (btnDemo) btnDemo.textContent = '⚠️ Mode Démo (Firebase non configuré)';
+    }
 }, 3000);
 
-$('btn-google-signin').addEventListener('click', async ()=>{
-  if(!fbReady) { demoLogin(); return; }
-  try {
-    const { auth, GoogleAuthProvider, signInWithPopup } = window._fb;
-    const provider = new GoogleAuthProvider();
-    await signInWithPopup(auth, provider);
-  } catch(e) { toast('Erreur connexion: '+e.message,'error'); }
-});
-
-$('btn-demo').addEventListener('click', demoLogin);
-
-function demoLogin() {
-  S.user = { uid: 'demo', displayName: 'Démo', photoURL: null, email: 'demo@aurora.app' };
-  S.prenom = 'Démo';
-  S.capital = 1240.50;
-  S.incomes = [
-    { id:'i1', source:'💼 Salaire', amount:2800, date:'2025-05-01', note:'Salaire mai', scope:'personal' },
-    { id:'i2', source:'👶 Allocations familiales', amount:300, date:'2025-05-03', note:'', scope:'family' },
-  ];
-  S.factures = [
-    { id:'f1', nom:'Crédit Agricole', montant:420, echeance:'2025-05-08', prio:1, scope:'family', paid:false, ref:'CA-2025-05', qrdata:'', photo:null },
-    { id:'f2', nom:'Sunrise Internet', montant:49.90, echeance:'2025-05-10', prio:2, scope:'personal', paid:false, ref:'SUN-0524', qrdata:'', photo:null },
-    { id:'f3', nom:'EWZ Électricité', montant:87.50, echeance:'2025-05-20', prio:3, scope:'family', paid:false, ref:'EWZ-052025', qrdata:'', photo:null },
-    { id:'f4', nom:'Dentiste', montant:150, echeance:'2025-06-15', prio:4, scope:'personal', paid:false, ref:'', qrdata:'', photo:null },
-    { id:'f5', nom:'Assurance Maladie', montant:312, echeance:'2025-05-05', prio:1, scope:'family', paid:true, ref:'CSS-05', qrdata:'', photo:null },
-  ];
-  S.charges = [
-    { id:'c1', nom:'🏠 Loyer', montant:1350, freq:'monthly', cat:'🏠 Loyer / Charges', scope:'family' },
-    { id:'c2', nom:'📱 Abonnement téléphone', montant:25, freq:'monthly', cat:'📱 Télécom', scope:'personal' },
-    { id:'c3', nom:'🎬 Netflix', montant:17.90, freq:'monthly', cat:'🎬 Abonnement loisirs', scope:'family' },
-    { id:'c4', nom:'🛡️ Assurance RC', montant:38, freq:'monthly', cat:'🛡️ Assurance', scope:'personal' },
-  ];
-  S.bocaux = [
-    { id:'b1', nom:'🏖️ Vacances Grèce', objectif:2000, actuel:340, desir:8, dateObj:'2025-08-01', scope:'family' },
-    { id:'b2', nom:'🚗 Voiture réparations', objectif:1500, actuel:200, desir:6, dateObj:'2025-10-01', scope:'personal' },
-    { id:'b3', nom:'🎓 Formation photo', objectif:500, actuel:50, desir:4, dateObj:'2025-12-01', scope:'personal' },
-  ];
-  S.nextId = 100;
-  saveLS();
-  loginSuccess();
+// 3. Événements de clic
+if ($('btn-google-signin')) {
+    $('btn-google-signin').addEventListener('click', async () => {
+        if (!fbReady) {
+            window.demoLogin();
+            return;
+        }
+        try {
+            const { auth, GoogleAuthProvider, signInWithPopup } = window._fb;
+            const provider = new GoogleAuthProvider();
+            await signInWithPopup(auth, provider);
+        } catch (e) {
+            alert('Erreur connexion: ' + e.message);
+        }
+    });
 }
 
-function loginSuccess() {
-  $('screen-auth').classList.remove('active');
-  $('screen-main').classList.add('active');
-  updateTopbar();
-  renderBilan();
-  // Init default date
-  $('inc-date').value = today();
+if ($('btn-demo')) {
+    $('btn-demo').addEventListener('click', () => window.demoLogin());
 }
 
-function showAuth() {
-  $('screen-main').classList.remove('active');
-  $('screen-auth').classList.add('active');
-}
+// 4. Fonctions globales (attachées à window pour être vues par le HTML)
+window.demoLogin = function() {
+    console.log("Démarrage du mode démo...");
+    S.user = { uid: 'demo', displayName: 'Démo', photoURL: null, email: 'demo@aurora.app' };
+    S.prenom = 'Démo';
+    S.capital = 1240.50;
+    S.incomes = [
+        { id:'i1', source:'💼 Salaire', amount:2800, date:'2025-05-01', note:'Salaire mai', scope:'personal' },
+        { id:'i2', source:'👶 Allocations familiales', amount:300, date:'2025-05-03', note:'', scope:'family' },
+    ];
+    S.factures = [
+        { id:'f1', nom:'Crédit Agricole', montant:420, echeance:'2025-05-08', prio:1, scope:'family', paid:false, ref:'CA-2025-05' },
+        { id:'f2', nom:'Sunrise Internet', montant:49.90, echeance:'2025-05-10', prio:2, scope:'personal', paid:false, ref:'SUN-0524' },
+        { id:'f5', nom:'Assurance Maladie', montant:312, echeance:'2025-05-05', prio:1, scope:'family', paid:true, ref:'CSS-05' },
+    ];
+    S.charges = [
+        { id:'c1', nom:'🏠 Loyer', montant:1350, freq:'monthly', cat:'🏠 Loyer / Charges', scope:'family' },
+        { id:'c3', nom:'🎬 Netflix', montant:17.90, freq:'monthly', cat:'🎬 Abonnement loisirs', scope:'family' },
+    ];
+    S.bocaux = [
+        { id:'b1', nom:'🏖️ Vacances Grèce', objectif:2000, actuel:340, desir:8, dateObj:'2025-08-01', scope:'family' },
+    ];
+    S.nextId = 100;
+    
+    if (typeof saveLS === 'function') saveLS();
+    window.loginSuccess();
+};
 
-async function doSignOut() {
-  if(fbReady && S.user?.uid !== 'demo') {
-    const {auth, signOut} = window._fb;
-    await signOut(auth);
-  }
-  S = { user:null, familyId:null, prenom:'', capital:0, incomes:[], factures:[], charges:[], bocaux:[], nextId:1 };
-  saveLS();
-  closeSheet('sheet-profile');
-  showAuth();
-}
+window.loginSuccess = function() {
+    console.log("Bascule vers l'application...");
+    const authScreen = $('screen-auth');
+    const mainScreen = $('screen-main');
+    
+    if (authScreen && mainScreen) {
+        authScreen.classList.remove('active');
+        mainScreen.classList.add('active');
+        if (typeof updateTopbar === 'function') updateTopbar();
+        if (typeof renderBilan === 'function') renderBilan();
+        
+        const dateInput = $('inc-date');
+        if (dateInput) dateInput.value = new Date().toISOString().split('T')[0];
+    }
+};
 
-function updateTopbar() {
-  const hr = new Date().getHours();
-  const greet = hr<12?'Bonjour':'Bonsoir';
-  $('tb-greeting').textContent = greet;
-  $('tb-name').textContent = S.prenom || 'Aurora';
-  const av = $('tb-avatar');
-  if(S.user?.photoURL) { av.innerHTML=`<img src="${S.user.photoURL}" alt=""/>`; }
-  else { av.textContent = (S.prenom||'A')[0].toUpperCase(); }
-}
+window.showAuth = function() {
+    $('screen-main').classList.remove('active');
+    $('screen-auth').classList.add('active');
+};
 
+window.doSignOut = async function() {
+    if (fbReady && S.user?.uid !== 'demo') {
+        const { auth, signOut } = window._fb;
+        await signOut(auth);
+    }
+    S = { user:null, familyId:null, prenom:'', capital:0, incomes:[], factures:[], charges:[], bocaux:[], nextId:1 };
+    if (typeof saveLS === 'function') saveLS();
+    if (typeof closeSheet === 'function') closeSheet('sheet-profile');
+    window.showAuth();
+};
+
+window.updateTopbar = function() {
+    const hr = new Date().getHours();
+    const greet = hr < 12 ? 'Bonjour' : 'Bonsoir';
+    if ($('tb-greeting')) $('tb-greeting').textContent = greet;
+    if ($('tb-name')) $('tb-name').textContent = S.prenom || 'Aurora';
+    
+    const av = $('tb-avatar');
+    if (av) {
+        if (S.user?.photoURL) { 
+            av.innerHTML = `<img src="${S.user.photoURL}" alt=""/>`; 
+        } else { 
+            av.textContent = (S.prenom || 'A')[0].toUpperCase(); 
+        }
+    }
+};
 /* ════════════════════════════════════════════
    CAPITAL ENGINE
 ════════════════════════════════════════════ */
