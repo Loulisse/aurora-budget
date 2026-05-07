@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="fr">
 <head>
 <meta charset="UTF-8"/>
@@ -13,6 +14,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Instrument+Serif:ital@0;1&display=swap"/>
 
 <!-- Firebase (module) — expose _fb sur window puis émet 'firebase-ready' -->
+
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
@@ -360,6 +362,7 @@ video#cam-vid{width:100%;display:block;max-height:280px;object-fit:cover;}
 .btn-google.loading::after{content:'';display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;margin-left:8px;}
 @keyframes spin{to{transform:rotate(360deg)}}
 </style>
+
 </head>
 <body>
 <div id="app">
@@ -367,6 +370,7 @@ video#cam-vid{width:100%;display:block;max-height:280px;object-fit:cover;}
 <div class="toast" id="toast"></div>
 
 <!-- AUTH SCREEN -->
+
 <div class="screen active" id="screen-auth">
   <div class="auth-blob">🌿</div>
   <div class="auth-logo">Aurora</div>
@@ -377,10 +381,12 @@ video#cam-vid{width:100%;display:block;max-height:280px;object-fit:cover;}
     Continuer avec Google
   </button>
 
-  <button class="auth-demo" id="btn-demo">Essayer sans compte →</button>
+<button class="auth-demo" id="btn-demo">Essayer sans compte →</button>
+
 </div>
 
 <!-- MAIN APP -->
+
 <div class="screen" id="screen-main">
   <div class="statusbar"></div>
   <div class="topbar">
@@ -435,7 +441,8 @@ video#cam-vid{width:100%;display:block;max-height:280px;object-fit:cover;}
     </button>
   </div>
 
-  <button class="fab" id="fab-main">＋</button>
+<button class="fab" id="fab-main">＋</button>
+
   <div class="fab-menu" id="fab-menu">
     <div class="fab-menu-item" id="fmi-income"><div class="fab-menu-label">Entrée d'argent</div><div class="fab-menu-icon">💸</div></div>
     <div class="fab-menu-item" id="fmi-facture"><div class="fab-menu-label">Nouvelle facture</div><div class="fab-menu-icon">📄</div></div>
@@ -445,7 +452,9 @@ video#cam-vid{width:100%;display:block;max-height:280px;object-fit:cover;}
 </div>
 
 <!-- SHEETS -->
+
 <!-- PROFILE -->
+
 <div class="sheet-overlay" id="sheet-profile">
   <div class="sheet">
     <div class="sheet-pill"></div>
@@ -477,6 +486,7 @@ video#cam-vid{width:100%;display:block;max-height:280px;object-fit:cover;}
 </div>
 
 <!-- ADD INCOME -->
+
 <div class="sheet-overlay" id="sheet-add-income">
   <div class="sheet">
     <div class="sheet-pill"></div>
@@ -521,6 +531,7 @@ video#cam-vid{width:100%;display:block;max-height:280px;object-fit:cover;}
 </div>
 
 <!-- ADD FACTURE -->
+
 <div class="sheet-overlay" id="sheet-add-facture">
   <div class="sheet">
     <div class="sheet-pill"></div>
@@ -598,6 +609,7 @@ video#cam-vid{width:100%;display:block;max-height:280px;object-fit:cover;}
 </div>
 
 <!-- ADD CHARGE -->
+
 <div class="sheet-overlay" id="sheet-add-charge">
   <div class="sheet">
     <div class="sheet-pill"></div>
@@ -639,6 +651,7 @@ video#cam-vid{width:100%;display:block;max-height:280px;object-fit:cover;}
 </div>
 
 <!-- ADD BOCAL -->
+
 <div class="sheet-overlay" id="sheet-add-bocal">
   <div class="sheet">
     <div class="sheet-pill"></div>
@@ -668,6 +681,7 @@ video#cam-vid{width:100%;display:block;max-height:280px;object-fit:cover;}
 </div>
 
 <!-- DETAIL FACTURE -->
+
 <div class="sheet-overlay" id="sheet-detail-facture">
   <div class="sheet">
     <div class="sheet-pill"></div>
@@ -680,6 +694,7 @@ video#cam-vid{width:100%;display:block;max-height:280px;object-fit:cover;}
 </div>
 
 <!-- DETAIL BOCAL -->
+
 <div class="sheet-overlay" id="sheet-detail-bocal">
   <div class="sheet">
     <div class="sheet-pill"></div>
@@ -694,6 +709,7 @@ video#cam-vid{width:100%;display:block;max-height:280px;object-fit:cover;}
 </div><!-- /app -->
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jsqr/1.4.0/jsQR.min.js"></script>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
 <script>
@@ -1279,44 +1295,40 @@ function demoLogin() {
 
 /* ══ FIREBASE AUTH LISTENER ══ */
 window.addEventListener('firebase-ready', () => {
-  fbReady=true;
-  const {auth, onAuthStateChanged}=window._fb;
-  onAuthStateChanged(auth, user=>{
-    if(user){
-      S.user=user;
-      S.prenom=S.prenom||user.displayName?.split(' ')[0]||'Vous';
+  fbReady = true;
+  const {auth, onAuthStateChanged} = window._fb;
+  onAuthStateChanged(auth, user => {
+    // NE PAS interférer si on est déjà connecté (mode démo ou déjà loggué)
+    if (S.user) return;
+    if (user) {
+      S.user = user;
+      S.prenom = S.prenom || user.displayName?.split(' ')[0] || 'Vous';
       loginSuccess();
-    } else {
-      showAuth();
     }
+    // Si pas d'utilisateur Firebase et pas de session démo → on reste sur l'écran auth (déjà actif par défaut)
   });
 });
 
-// Fallback si Firebase met trop de temps
-setTimeout(()=>{
-  if(!fbReady){
-    console.warn('Firebase timeout — mode démo disponible');
-    const btn=$('btn-demo');
-    if(btn) btn.textContent='⚠️ Essayer sans compte →';
-  }
-},4000);
-
 /* ══ BOUTON GOOGLE ══ */
-$('btn-google-signin').addEventListener('click', async ()=>{
-  if(!fbReady){ demoLogin(); return; }
-  const btn=$('btn-google-signin');
+$('btn-google-signin').addEventListener('click', async () => {
+  if (!fbReady) {
+    // Firebase pas encore prêt → mode démo automatique
+    demoLogin();
+    return;
+  }
+  const btn = $('btn-google-signin');
   btn.classList.add('loading');
-  btn.querySelector('svg').style.display='none';
+  btn.querySelector('svg').style.display = 'none';
   try {
-    const {auth, GoogleAuthProvider, signInWithPopup}=window._fb;
-    const provider=new GoogleAuthProvider();
+    const {auth, GoogleAuthProvider, signInWithPopup} = window._fb;
+    const provider = new GoogleAuthProvider();
     await signInWithPopup(auth, provider);
     // onAuthStateChanged prend le relais
   } catch(e) {
     btn.classList.remove('loading');
-    btn.querySelector('svg').style.display='';
-    if(e.code!=='auth/popup-closed-by-user'){
-      toast('Erreur: '+e.message,'error');
+    btn.querySelector('svg').style.display = '';
+    if (e.code !== 'auth/popup-closed-by-user') {
+      toast('Erreur connexion Google: ' + (e.message || e.code), 'error');
     }
   }
 });
@@ -1326,7 +1338,12 @@ $('btn-demo').addEventListener('click', demoLogin);
 
 /* ══ INIT ══ */
 loadLS();
+// Si une session démo était sauvegardée, on reprend directement
+if (S.user) {
+  loginSuccess();
+}
 bindUI();
 </script>
+
 </body>
 </html>
