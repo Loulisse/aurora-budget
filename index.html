@@ -598,8 +598,9 @@ video#cam-vid{width:100%;display:block;max-height:280px;object-fit:cover;}
     Continuer avec Google
   </button>
 
-  <div class="auth-demo" id="btn-demo" onclick="window.demoLogin()" style="cursor: pointer;">
-    Essayer sans compte →
+  <a href="javascript:void(0)" class="auth-demo" id="btn-demo" onclick="window.demoLogin(); return false;" style="cursor: pointer; display: block; text-decoration: none;">
+   Essayer sans compte →
+</a>
   </div>
 </div>
 
