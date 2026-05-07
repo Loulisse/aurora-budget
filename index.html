@@ -1253,101 +1253,103 @@ function updateTopbar() {
   if(av){ if(S.user?.photoURL) av.innerHTML=`<img src="${S.user.photoURL}" alt=""/>`; else av.textContent=(S.prenom||'A')[0].toUpperCase(); }
 }
 
-/* ══ AUTH ══ */
-function loginSuccess() {
-  $('screen-auth').classList.remove('active');
-  $('screen-main').classList.add('active');
-  updateTopbar(); renderBilan();
-  $('inc-date').value=today();
-}
-function showAuth() {
-  $('screen-main').classList.remove('active');
-  $('screen-auth').classList.add('active');
-}
-async function doSignOut() {
-  if(fbReady && S.user?.uid!=='demo'){
-    const {auth,signOut}=window._fb; await signOut(auth);
-  }
-  S={user:null,familyId:null,prenom:'',capital:0,incomes:[],factures:[],charges:[],bocaux:[],nextId:1};
-  saveLS(); closeSheet('sheet-profile'); showAuth();
-}
-function demoLogin() {
-  S.user={uid:'demo',displayName:'Démo',photoURL:null,email:'demo@aurora.app'};
-  S.prenom='Louise';
-  S.incomes=[
-    {id:'i1',source:'💼 Salaire',amount:2800,date:'2025-05-01',note:'Salaire mai',scope:'personal'},
-    {id:'i2',source:'👶 Allocations familiales',amount:300,date:'2025-05-03',note:'',scope:'family'},
-  ];
-  S.factures=[
-    {id:'f1',nom:'Crédit Agricole',montant:420,echeance:'2025-05-08',prio:1,scope:'family',paid:false,ref:'CA-2025-05',qrdata:'',photo:null,paidDate:null},
-    {id:'f2',nom:'Sunrise Internet',montant:49.90,echeance:'2025-05-10',prio:2,scope:'personal',paid:false,ref:'SUN-0524',qrdata:'',photo:null,paidDate:null},
-    {id:'f3',nom:'Assurance Maladie',montant:312,echeance:'2025-05-05',prio:1,scope:'family',paid:true,ref:'CSS-05',qrdata:'',photo:null,paidDate:'2025-05-04'},
-  ];
-  S.charges=[
-    {id:'c1',nom:'Loyer',montant:1350,freq:'monthly',cat:'🏠 Loyer / Charges',scope:'family'},
-    {id:'c2',nom:'Netflix',montant:17.90,freq:'monthly',cat:'🎬 Abonnement loisirs',scope:'family'},
-  ];
-  S.bocaux=[
-    {id:'b1',nom:'🏖️ Vacances Grèce',objectif:2000,actuel:340,desir:8,dateObj:'2025-08-01',scope:'family'},
-  ];
-  saveLS(); loginSuccess();
-}
+/* ══ AUTH & CONNEXION ══ */
 
-/* ══ GESTION DE LA CONNEXION ══ */
-
-// Fonction unique pour gérer l'entrée dans l'app
+// Fonction maîtresse pour entrer dans l'application
 function handleAppAccess(user) {
   S.user = user;
+  // Si c'est un vrai utilisateur Google
   if (user && user.uid !== 'demo') {
     S.prenom = S.prenom || user.displayName?.split(' ')[0] || 'Voyageur';
   }
   
-  // On cache l'auth et on affiche le main
+  // Bascule visuelle des écrans
   $('screen-auth').classList.remove('active');
   $('screen-main').classList.add('active');
   
-  // On initialise l'affichage
+  // Initialisation de l'interface
   updateTopbar();
-  openTab('bilan'); // Force l'affichage du premier onglet
+  openTab('bilan'); 
+  
+  // Petite sécurité pour le champ date
+  if($('inc-date')) $('inc-date').value = today();
+  
   toast("Bienvenue " + (S.prenom || "sur Aurora"));
 }
 
-// 1. Écouteur Firebase
+function showAuth() {
+  $('screen-main').classList.remove('active');
+  $('screen-auth').classList.add('active');
+}
+
+async function doSignOut() {
+  if(fbReady && S.user?.uid !== 'demo'){
+    const {auth, signOut} = window._fb; 
+    await signOut(auth);
+  }
+  // Reset de l'état local
+  S = {user:null, familyId:null, prenom:'', capital:0, incomes:[], factures:[], charges:[], bocaux:[], nextId:1};
+  saveLS(); 
+  closeSheet('sheet-profile'); 
+  showAuth();
+}
+
+function demoLogin() {
+  console.log("Initialisation du mode démo...");
+  S.user = {uid:'demo', displayName:'Louise', email:'demo@aurora.app'};
+  S.prenom = 'Louise';
+  S.incomes = [
+    {id:'i1', source:'💼 Salaire', amount:2800, date:'2025-05-01', note:'Salaire mai', scope:'personal'},
+    {id:'i2', source:'👶 Allocations', amount:300, date:'2025-05-03', note:'', scope:'family'}
+  ];
+  S.factures = [
+    {id:'f1', nom:'Crédit Agricole', montant:420, echeance:'2025-05-08', prio:1, scope:'family', paid:false},
+    {id:'f2', nom:'Sunrise Internet', montant:49.90, echeance:'2025-05-10', prio:2, scope:'personal', paid:false}
+  ];
+  S.charges = [
+    {id:'c1', nom:'Loyer', montant:1350, freq:'monthly', cat:'🏠 Loyer', scope:'family'}
+  ];
+  S.bocaux = [
+    {id:'b1', nom:'🏖️ Vacances', objectif:2000, actuel:340, desir:8, scope:'family'}
+  ];
+  saveLS();
+  // On utilise handleAppAccess au lieu de loginSuccess pour éviter les doublons
+  handleAppAccess(S.user);
+}
+
+/* ══ LISTENERS ══ */
+
 window.addEventListener('firebase-ready', () => {
   fbReady = true;
   const { auth, onAuthStateChanged } = window._fb;
-  
   onAuthStateChanged(auth, user => {
-    if (user && !S.user) { // Si loggué via Firebase et pas encore en session
-      handleAppAccess(user);
-    }
+    if (user && !S.user) handleAppAccess(user);
   });
 });
 
-// 2. Bouton Google
 $('btn-google-signin').addEventListener('click', async () => {
-  if (!fbReady) return toast("Connexion en cours...", "error");
-  
+  if (!fbReady) return toast("Firebase non prêt", "error");
   const btn = $('btn-google-signin');
   btn.classList.add('loading');
-  
   try {
     const { auth, GoogleAuthProvider, signInWithPopup } = window._fb;
-    const provider = new GoogleAuthProvider();
-    await signInWithPopup(auth, provider);
+    await signInWithPopup(auth, new GoogleAuthProvider());
   } catch(e) {
     btn.classList.remove('loading');
-    toast("Erreur : " + e.message, "error");
+    toast("Erreur connexion", "error");
   }
 });
 
-// 3. Bouton Démo (Indépendant de Firebase)
-$('btn-demo').addEventListener('click', () => {
-  console.log("Mode démo activé");
-  demoLogin(); // Cette fonction remplit S avec les données fictives
-  handleAppAccess({uid: 'demo', displayName: 'Louise'});
-});
+$('btn-demo').addEventListener('click', demoLogin);
 
+/* ══ INIT ══ */
+loadLS();
+bindUI();
+
+// Pour le test : si on a déjà un utilisateur en mémoire, on entre direct
+if (S.user) {
+    handleAppAccess(S.user);
+}
 </script>
 </body>
 </html>
