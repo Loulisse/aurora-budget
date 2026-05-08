@@ -83,6 +83,47 @@
         .nav-item.active { color: var(--sage); }
 
         /* [DEBUT ZONE COPIER-COLLER CSS - FUTURES FONCTIONS] */
+                /* Styles pour le Bilan */
+        .card-balance {
+            background: var(--ink); color: #fff; border-radius: 24px; padding: 24px;
+            margin-bottom: 20px; box-shadow: var(--shadow-md);
+        }
+        .balance-label { font-size: .7rem; text-transform: uppercase; letter-spacing: 1px; opacity: .7; }
+        .balance-amount { font-family: var(--serif); font-size: 2.8rem; margin: 5px 0; }
+        
+        .split-balance { display: flex; gap: 15px; margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.1); }
+        .split-item { flex: 1; }
+        .split-val { font-weight: 700; font-size: 1.1rem; display: block; }
+        .split-lab { font-size: 0.6rem; text-transform: uppercase; opacity: 0.7; }
+
+        /* Styles pour la liste d'activités */
+        .section-title { font-family: var(--serif); font-size: 1.4rem; margin: 20px 0 12px; display: flex; justify-content: space-between; align-items: center; }
+        .transaction-item {
+            background: #fff; padding: 16px; border-radius: 18px; border: 1.5px solid var(--border);
+            margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;
+        }
+        .item-info { display: flex; flex-direction: column; }
+        .item-label { font-weight: 700; font-size: 0.95rem; }
+        .item-tag { font-size: 0.6rem; font-weight: 800; text-transform: uppercase; padding: 2px 8px; border-radius: 100px; margin-top: 4px; width: fit-content; }
+        .tag-me { background: var(--blue-l); color: var(--blue); }
+        .tag-family { background: var(--sage-l); color: var(--sage); }
+        .item-amount { font-weight: 800; color: var(--sage); }
+
+        /* Bouton Flottant Ajout */
+        .fab {
+            position: fixed; bottom: calc(85px + var(--safe-b)); right: 20px;
+            width: 56px; height: 56px; border-radius: 50%; background: var(--ink);
+            color: #fff; border: none; font-size: 1.5rem; display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2); z-index: 90;
+        }
+
+        /* Sélecteur de portée (Moi/Famille) */
+        .scope-picker { display: flex; gap: 10px; margin: 15px 0; }
+        .scope-opt { 
+            flex: 1; padding: 12px; border-radius: 12px; border: 1.5px solid var(--border); 
+            background: var(--ivory); font-weight: 700; font-size: 0.8rem; cursor: pointer;
+        }
+        .scope-opt.active { background: var(--ink); color: #fff; border-color: var(--ink); }
         /* C'est ici que vous ajouterez les styles pour les factures, le bocal d'épargne, etc. */
         /* [FIN ZONE COPIER-COLLER CSS] */
 
@@ -172,6 +213,128 @@
         };
 
         /* [DEBUT ZONE COPIER-COLLER JAVASCRIPT - LOGIQUE FONCTIONS] */
+                        <div class="card-balance">
+                    <span class="balance-label">Solde Total</span>
+                    <div class="balance-amount" id="total-balance">0,00 €</div>
+                    
+                    <div class="split-balance">
+                        <div class="split-item">
+                            <span class="split-val" id="me-balance">0 €</span>
+                            <span class="split-lab">Moi</span>
+                        </div>
+                        <div class="split-item">
+                            <span class="split-val" id="fam-balance">0 €</span>
+                            <span class="split-lab">Famille</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section-title">
+                    <span>Revenus</span>
+                </div>
+
+                <div id="income-list">
+                    </div>
+
+                <button class="fab" id="btn-open-add">＋</button>
+        <div class="screen" id="modal-add-income" style="background:rgba(0,0,0,0.4); justify-content:center; align-items:center; padding:20px;">
+            <div class="auth-card" style="transform:none; opacity:1;">
+                <h3 style="font-family:var(--serif); font-size:1.5rem; margin-bottom:15px;">Ajouter un revenu</h3>
+                
+                <input class="auth-input" id="in-label" type="text" placeholder="Source (ex: Salaire, Vente...)">
+                <input class="auth-input" id="in-amount" type="number" placeholder="Montant en €">
+                
+                <p style="font-size:0.7rem; font-weight:700; color:var(--ink3); text-transform:uppercase;">C'est pour qui ?</p>
+                <div class="scope-picker">
+                    <div class="scope-opt active" id="opt-me" onclick="setScope('me')">MOI</div>
+                    <div class="scope-opt" id="opt-fam" onclick="setScope('family')">FAMILLE</div>
+                </div>
+
+                <button class="auth-btn" id="btn-save-income">Enregistrer le revenu</button>
+                <button class="auth-btn" onclick="$('modal-add-income').classList.remove('active')" style="background:none; color:var(--ink3); font-size:0.8rem; margin-top:5px;">Annuler</button>
+            </div>
+        </div>
+        let currentScope = 'me';
+        let transactions = JSON.parse(localStorage.getItem('aurora_tx') || '[]');
+
+        // Changer la destination (Moi ou Famille)
+        window.setScope = (scope) => {
+            currentScope = scope;
+            $('opt-me').classList.toggle('active', scope === 'me');
+            $('opt-fam').classList.toggle('active', scope === 'family');
+        };
+
+        // Ouvrir/Fermer la modale
+        $('btn-open-add').onclick = () => $('modal-add-income').classList.add('active');
+
+        // Enregistrer une donnée
+        $('btn-save-income').onclick = () => {
+            const label = $('in-label').value.trim();
+            const amount = parseFloat($('in-amount').value);
+
+            if (!label || isNaN(amount)) return alert("Remplissez les champs correctement.");
+
+            const tx = {
+                id: Date.now(),
+                label: label,
+                amount: amount,
+                scope: currentScope,
+                date: new Date().toLocaleDateString('fr-FR')
+            };
+
+            transactions.push(tx);
+            localStorage.setItem('aurora_tx', JSON.stringify(transactions));
+            
+            // Reset
+            $('in-label').value = ''; $('in-amount').value = '';
+            $('modal-add-income').classList.remove('active');
+            
+            renderData();
+        };
+
+        // Afficher les données et calculer le bilan
+        function renderData() {
+            const list = $('income-list');
+            list.innerHTML = transactions.length === 0 ? '<p style="text-align:center; color:var(--ink3); font-size:0.8rem;">Aucun revenu enregistré</p>' : '';
+
+            let total = 0;
+            let totalMe = 0;
+            let totalFam = 0;
+
+            // Trier du plus récent au plus ancien
+            transactions.sort((a, b) => b.id - a.id).forEach(t => {
+                total += t.amount;
+                if (t.scope === 'me') totalMe += t.amount;
+                else totalFam += t.amount;
+
+                const div = document.createElement('div');
+                div.className = 'transaction-item';
+                div.innerHTML = `
+                    <div class="item-info">
+                        <span class="item-label">${t.label}</span>
+                        <span class="item-tag ${t.scope === 'me' ? 'tag-me' : 'tag-family'}">
+                            ${t.scope === 'me' ? 'Personnel' : 'Famille'}
+                        </div>
+                    </div>
+                    <div class="item-amount">+ ${t.amount.toLocaleString()} €</div>
+                `;
+                list.appendChild(div);
+            });
+
+            // Mettre à jour les chiffres du bilan
+            $('total-balance').textContent = total.toLocaleString() + ' €';
+            $('me-balance').textContent = totalMe.toLocaleString() + ' €';
+            $('fam-balance').textContent = totalFam.toLocaleString() + ' €';
+        }
+
+        // On lance l'affichage au démarrage
+        // (On rajoute l'appel à renderData dans votre fonction startApp existante)
+        const originalStartApp = startApp;
+        startApp = function(name, fcode) {
+            originalStartApp(name, fcode);
+            renderData();
+        };
+
         /* Ici, nous ajouterons les calculs de factures, les sauvegardes de revenus, etc. */
         /* [FIN ZONE COPIER-COLLER JAVASCRIPT] */
 
