@@ -7,7 +7,6 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
 <title>Aurora</title>
 <style>
-/* RESET & BASE */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 :root{
   --ivory:#FAFAF7;--ink:#1C1B18;--sage:#5C7A5F;--border:rgba(28,27,24,.1);
@@ -16,39 +15,27 @@
 }
 html,body{height:100%;background:var(--ivory);color:var(--ink);font-family:var(--sans);overflow:hidden;touch-action:manipulation;}
 
-/* STRUCTURE DES ÉCRANS */
-.screen{
-  position:absolute;inset:0;display:flex;flex-direction:column;
-  background:var(--ivory);opacity:0;pointer-events:none;
-  transition:opacity .3s ease;z-index:1;
-}
+.screen{position:absolute;inset:0;display:flex;flex-direction:column;background:var(--ivory);opacity:0;pointer-events:none;transition:opacity .3s ease;z-index:1;}
 .screen.active{opacity:1;pointer-events:all;z-index:100 !important;}
 
-/* AUTH CARD */
-#screen-auth{justify-content:center;align-items:center;padding:24px;text-align:center;}
-.auth-card{
-  background:#fff;border-radius:28px;padding:24px;
-  border:1.5px solid var(--border);width:100%;max-width:360px;
-  box-shadow:0 10px 30px rgba(0,0,0,0.05);
-  position:relative;z-index:101; /* Toujours au-dessus */
-}
-.auth-input{
-  width:100%;padding:16px;border-radius:14px;
-  border:1.5px solid var(--border);font-size:16px !important;
-  margin-bottom:12px;outline:none;-webkit-appearance:none;
-  background:#fff;display:block;
-}
-.auth-btn{
-  width:100%;padding:18px;background:var(--ink);color:#fff;
-  border:none;border-radius:100px;font-weight:700;font-size:1rem;
-  cursor:pointer;display:flex;align-items:center;justify-content:center;
-  -webkit-user-select:none;user-select:none;
-}
+#screen-auth{justify-content:center;align-items:center;padding:24px;text-align:center;overflow-y:auto;}
+.auth-card{background:#fff;border-radius:28px;padding:24px;border:1.5px solid var(--border);width:100%;max-width:360px;box-shadow:0 10px 30px rgba(0,0,0,0.05);position:relative;z-index:101;}
+.auth-input{width:100%;padding:16px;border-radius:14px;border:1.5px solid var(--border);font-size:16px !important;margin-bottom:12px;outline:none;-webkit-appearance:none;background:#fff;display:block;}
+
+.auth-btn{width:100%;padding:18px;background:var(--ink);color:#fff;border:none;border-radius:100px;font-weight:700;font-size:1rem;cursor:pointer;margin-bottom:15px;}
 .auth-btn:active{transform:scale(0.96);opacity:0.9;}
 
-/* MAIN APP (Squelette pour le test) */
+/* STYLE CODE FAMILLE */
+.divider{display:flex;align-items:center;gap:10px;margin:20px 0;color:#888;font-size:0.7rem;text-transform:uppercase;letter-spacing:1px;}
+.divider::before, .divider::after{content:'';flex:1;height:1px;background:var(--border);}
+
+.family-section{background:#f9f9f7;padding:15px;border-radius:18px;border:1px dashed var(--border);}
+.auth-code-input{width:100%;padding:12px;border-radius:10px;border:1.5px solid var(--border);font-size:16px !important;text-align:center;text-transform:uppercase;letter-spacing:2px;margin-bottom:10px;font-family:monospace;}
+.btn-secondary{background:var(--sage);color:white;padding:12px;border-radius:100px;border:none;width:100%;font-weight:600;font-size:0.85rem;cursor:pointer;}
+
 #screen-main{padding:20px;padding-top:var(--safe-t);}
-.header{font-family:var(--serif);font-size:2rem;margin-bottom:20px;}
+.header{font-family:var(--serif);font-size:2rem;margin-bottom:5px;}
+.status-tag{display:inline-block;padding:4px 10px;border-radius:100px;font-size:0.7rem;font-weight:700;margin-bottom:20px;}
 </style>
 </head>
 <body>
@@ -56,20 +43,30 @@ html,body{height:100%;background:var(--ivory);color:var(--ink);font-family:var(-
 <div id="app">
   <div class="screen active" id="screen-auth">
     <div class="auth-card">
-      <div style="font-size:3rem;margin-bottom:10px;">🌿</div>
-      <h1 style="font-family:var(--serif);font-size:2.5rem;margin-bottom:5px;">Aurora</h1>
-      <p style="color:#888;font-size:0.8rem;margin-bottom:25px;">VOTRE BUDGET, AVEC AMOUR</p>
+      <div style="font-size:2.5rem;margin-bottom:10px;">🌿</div>
+      <h1 style="font-family:var(--serif);font-size:2.2rem;margin-bottom:5px;">Aurora</h1>
+      <p style="color:#888;font-size:0.75rem;margin-bottom:20px;text-transform:uppercase;">Gestion de budget</p>
       
       <input class="auth-input" id="auth-prenom" type="text" placeholder="Votre prénom..." autocomplete="off">
-      <button class="auth-btn" id="btn-start">Accéder à Aurora →</button>
+      <button class="auth-btn" id="btn-start">Accéder en solo →</button>
+
+      <div class="divider">Ou famille</div>
+
+      <div class="family-section">
+        <p style="font-size:0.75rem;margin-bottom:10px;color:#555;">Rejoindre un espace avec un code :</p>
+        <input class="auth-code-input" id="auth-fcode" type="text" placeholder="FAM-XXXXXX" maxlength="10">
+        <button class="btn-secondary" id="btn-join">Rejoindre l'espace</button>
+      </div>
     </div>
   </div>
 
   <div class="screen" id="screen-main">
     <div class="header">Bonjour, <span id="user-name"></span></div>
+    <div id="family-status" class="status-tag"></div>
+    
     <div style="background:#fff;padding:20px;border-radius:20px;border:1px solid var(--border);">
-        <p>L'application est débloquée 🎉</p>
-        <button onclick="location.reload()" style="margin-top:20px;padding:10px;border-radius:10px;border:none;background:#eee;">Déconnexion</button>
+        <p id="main-message"></p>
+        <button onclick="logout()" style="margin-top:20px;padding:12px 20px;border-radius:100px;border:none;background:var(--ink);color:white;font-weight:600;width:100%;">Se déconnecter</button>
     </div>
   </div>
 </div>
@@ -77,54 +74,69 @@ html,body{height:100%;background:var(--ivory);color:var(--ink);font-family:var(-
 <script>
 const $ = id => document.getElementById(id);
 
-// GESTION DU DÉMARRAGE
-function handleAuth() {
-    const prenom = $('auth-prenom').value.trim();
-    
+// LOGIQUE DE DÉMARRAGE
+function startApp(prenom, codeFamille = null) {
     if (prenom.length < 2) {
-        alert("Merci d'entrer un prénom valide.");
+        alert("Entrez votre prénom");
         return;
     }
 
-    // Sauvegarde
     localStorage.setItem('aurora_user', prenom);
     $('user-name').textContent = prenom;
 
-    // Transition propre
+    if (codeFamille) {
+        localStorage.setItem('aurora_fcode', codeFamille.toUpperCase());
+        $('family-status').textContent = "🏠 ESPACE FAMILLE : " + codeFamille.toUpperCase();
+        $('family-status').style.background = "#EBF0EB";
+        $('family-status').style.color = "#5C7A5F";
+        $('main-message').textContent = "Vous êtes connecté à un espace partagé.";
+    } else {
+        localStorage.removeItem('aurora_fcode');
+        $('family-status').textContent = "👤 MODE SOLO";
+        $('family-status').style.background = "#eee";
+        $('family-status').style.color = "#666";
+        $('main-message').textContent = "Ceci est votre espace personnel privé.";
+    }
+
     $('screen-auth').classList.remove('active');
     $('screen-main').classList.add('active');
 }
 
-// DOUBLE SÉCURITÉ POUR IPHONE (Click + Touch)
-const startBtn = $('btn-start');
+function logout() {
+    localStorage.clear();
+    location.reload();
+}
 
-// 1. Pour les clics classiques et souris
-startBtn.addEventListener('click', function(e) {
+// ÉCOUTEURS D'ÉVÉNEMENTS
+$('btn-start').onclick = (e) => {
     e.preventDefault();
-    handleAuth();
-});
+    startApp($('auth-prenom').value.trim());
+};
 
-// 2. Pour le tactile iPhone (réagit avant le clic standard)
-startBtn.addEventListener('touchstart', function(e) {
-    // On ne fait rien ici pour laisser le clic se faire, 
-    // mais cela force iOS à reconnaître l'élément comme interactif.
-}, {passive: true});
-
-// 3. Gérer la touche "Entrée" du clavier
-$('auth-prenom').addEventListener('keypress', function(e) {
-    if (e.key === 'Enter') {
-        e.target.blur(); // Ferme le clavier (crucial sur iPhone)
-        handleAuth();
+$('btn-join').onclick = (e) => {
+    e.preventDefault();
+    const code = $('auth-fcode').value.trim();
+    if (code.length < 4) {
+        alert("Veuillez entrer un code famille valide");
+        return;
     }
-});
+    startApp($('auth-prenom').value.trim(), code);
+};
 
-// AU CHARGEMENT : Vérifier si déjà connecté
+// Gérer la touche "Entrée"
+$('auth-prenom').onkeypress = (e) => {
+    if (e.key === 'Enter') {
+        e.target.blur();
+        $('btn-start').click();
+    }
+};
+
+// Chargement initial
 window.onload = () => {
-    const saved = localStorage.getItem('aurora_user');
-    if (saved) {
-        $('user-name').textContent = saved;
-        $('screen-auth').classList.remove('active');
-        $('screen-main').classList.add('active');
+    const savedName = localStorage.getItem('aurora_user');
+    const savedCode = localStorage.getItem('aurora_fcode');
+    if (savedName) {
+        startApp(savedName, savedCode);
     }
 };
 </script>
