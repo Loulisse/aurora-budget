@@ -1059,6 +1059,25 @@ if (S.prenom) {
 }
 
 }); // fin DOMContentLoaded
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const btn = document.getElementById('btn-start');
+    const input = document.getElementById('auth-prenom');
+    
+    // Force le focus quand on clique sur le champ
+    input.addEventListener('touchstart', function() {
+      input.focus();
+    });
+
+    btn.addEventListener('click', function() {
+      if(input.value.length > 0) {
+        document.getElementById('screen-auth').style.display = 'none';
+        document.getElementById('screen-main').style.opacity = '1';
+        document.getElementById('screen-main').classList.add('active');
+      }
+    });
+  });
 </script>
 </body>
 </html>
