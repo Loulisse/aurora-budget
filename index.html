@@ -9,33 +9,36 @@
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 :root{
-  --ivory:#FAFAF7;--ink:#1C1B18;--sage:#5C7A5F;--border:rgba(28,27,24,.1);
+  --ivory:#FAFAF7;--ink:#1C1B18;--sage:#5C7A5F;--blue:#3B6B8C;--border:rgba(28,27,24,.1);
   --safe-t:env(safe-area-inset-top,44px);--safe-b:env(safe-area-inset-bottom,34px);
   --sans:'Plus Jakarta Sans',sans-serif;--serif:'Instrument Serif',serif;
 }
 html,body{height:100%;background:var(--ivory);color:var(--ink);font-family:var(--sans);overflow:hidden;touch-action:manipulation;}
 
+/* STRUCTURE */
 .screen{position:absolute;inset:0;display:flex;flex-direction:column;background:var(--ivory);opacity:0;pointer-events:none;transition:opacity .3s ease;z-index:1;}
 .screen.active{opacity:1;pointer-events:all;z-index:100 !important;}
 
-#screen-auth{justify-content:center;align-items:center;padding:24px;text-align:center;overflow-y:auto;}
-.auth-card{background:#fff;border-radius:28px;padding:24px;border:1.5px solid var(--border);width:100%;max-width:360px;box-shadow:0 10px 30px rgba(0,0,0,0.05);position:relative;z-index:101;}
-.auth-input{width:100%;padding:16px;border-radius:14px;border:1.5px solid var(--border);font-size:16px !important;margin-bottom:12px;outline:none;-webkit-appearance:none;background:#fff;display:block;}
+/* AUTH & SETUP */
+#screen-auth{justify-content:center;align-items:center;padding:24px;text-align:center;}
+.auth-card{background:#fff;border-radius:28px;padding:24px;border:1.5px solid var(--border);width:100%;max-width:360px;box-shadow:0 10px 30px rgba(0,0,0,0.05);z-index:101;}
+.auth-input{width:100%;padding:16px;border-radius:14px;border:1.5px solid var(--border);font-size:16px !important;margin-bottom:12px;outline:none;}
+.auth-btn{width:100%;padding:18px;background:var(--ink);color:#fff;border:none;border-radius:100px;font-weight:700;cursor:pointer;}
 
-.auth-btn{width:100%;padding:18px;background:var(--ink);color:#fff;border:none;border-radius:100px;font-weight:700;font-size:1rem;cursor:pointer;margin-bottom:15px;}
-.auth-btn:active{transform:scale(0.96);opacity:0.9;}
+/* SCOPE SELECTOR (L'élément clé) */
+.scope-selector{display:flex;gap:8px;margin:15px 0;}
+.scope-btn{flex:1;padding:12px;border-radius:12px;border:1.5px solid var(--border);background:#fff;font-size:0.8rem;font-weight:600;cursor:pointer;transition:0.2s;}
+.scope-btn.active[data-scope="me"]{background:var(--blue);color:white;border-color:var(--blue);}
+.scope-btn.active[data-scope="family"]{background:var(--sage);color:white;border-color:var(--sage);}
 
-/* STYLE CODE FAMILLE */
-.divider{display:flex;align-items:center;gap:10px;margin:20px 0;color:#888;font-size:0.7rem;text-transform:uppercase;letter-spacing:1px;}
-.divider::before, .divider::after{content:'';flex:1;height:1px;background:var(--border);}
+/* LISTING */
+.scroll-area{flex:1;overflow-y:auto;padding:20px;padding-bottom:100px;}
+.item-card{background:#fff;padding:15px;border-radius:18px;border:1.5px solid var(--border);margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;}
+.tag{font-size:0.6rem;padding:2px 8px;border-radius:100px;text-transform:uppercase;font-weight:800;margin-top:4px;display:inline-block;}
+.tag-me{background:#EBF2F8;color:var(--blue);}
+.tag-family{background:#EBF0EB;color:var(--sage);}
 
-.family-section{background:#f9f9f7;padding:15px;border-radius:18px;border:1px dashed var(--border);}
-.auth-code-input{width:100%;padding:12px;border-radius:10px;border:1.5px solid var(--border);font-size:16px !important;text-align:center;text-transform:uppercase;letter-spacing:2px;margin-bottom:10px;font-family:monospace;}
-.btn-secondary{background:var(--sage);color:white;padding:12px;border-radius:100px;border:none;width:100%;font-weight:600;font-size:0.85rem;cursor:pointer;}
-
-#screen-main{padding:20px;padding-top:var(--safe-t);}
-.header{font-family:var(--serif);font-size:2rem;margin-bottom:5px;}
-.status-tag{display:inline-block;padding:4px 10px;border-radius:100px;font-size:0.7rem;font-weight:700;margin-bottom:20px;}
+.fab{position:fixed;bottom:30px;right:20px;width:60px;height:60px;border-radius:50%;background:var(--ink);color:white;border:none;font-size:1.5rem;box-shadow:0 10px 20px rgba(0,0,0,0.2);z-index:200;}
 </style>
 </head>
 <body>
@@ -43,101 +46,121 @@ html,body{height:100%;background:var(--ivory);color:var(--ink);font-family:var(-
 <div id="app">
   <div class="screen active" id="screen-auth">
     <div class="auth-card">
-      <div style="font-size:2.5rem;margin-bottom:10px;">🌿</div>
-      <h1 style="font-family:var(--serif);font-size:2.2rem;margin-bottom:5px;">Aurora</h1>
-      <p style="color:#888;font-size:0.75rem;margin-bottom:20px;text-transform:uppercase;">Gestion de budget</p>
-      
-      <input class="auth-input" id="auth-prenom" type="text" placeholder="Votre prénom..." autocomplete="off">
-      <button class="auth-btn" id="btn-start">Accéder en solo →</button>
-
-      <div class="divider">Ou famille</div>
-
-      <div class="family-section">
-        <p style="font-size:0.75rem;margin-bottom:10px;color:#555;">Rejoindre un espace avec un code :</p>
-        <input class="auth-code-input" id="auth-fcode" type="text" placeholder="FAM-XXXXXX" maxlength="10">
-        <button class="btn-secondary" id="btn-join">Rejoindre l'espace</button>
-      </div>
+      <h1 style="font-family:var(--serif);font-size:2rem;margin-bottom:20px;">Configuration ✨</h1>
+      <input class="auth-input" id="setup-name" type="text" placeholder="Ton prénom...">
+      <input class="auth-input" id="setup-fcode" type="text" placeholder="Code Famille (Optionnel)">
+      <button class="auth-btn" id="btn-save-setup">Commencer →</button>
     </div>
   </div>
 
   <div class="screen" id="screen-main">
-    <div class="header">Bonjour, <span id="user-name"></span></div>
-    <div id="family-status" class="status-tag"></div>
-    
-    <div style="background:#fff;padding:20px;border-radius:20px;border:1px solid var(--border);">
-        <p id="main-message"></p>
-        <button onclick="logout()" style="margin-top:20px;padding:12px 20px;border-radius:100px;border:none;background:var(--ink);color:white;font-weight:600;width:100%;">Se déconnecter</button>
+    <div style="padding:20px;padding-top:var(--safe-t);border-bottom:1px solid var(--border);">
+        <h2 style="font-family:var(--serif);">Mon Bilan</h2>
+        <div id="display-fcode" style="font-size:0.7rem;color:var(--sage);font-weight:700;"></div>
     </div>
+    
+    <div class="scroll-area" id="main-list">
+        </div>
+
+    <button class="fab" id="btn-add">＋</button>
   </div>
+</div>
+
+<div class="screen" id="screen-add" style="background:rgba(0,0,0,0.5);justify-content:center;align-items:center;padding:20px;">
+    <div class="auth-card">
+        <h3 style="margin-bottom:15px;">Nouvelle entrée</h3>
+        <input class="auth-input" id="in-label" type="text" placeholder="Libellé (ex: Loyer, Salaire...)">
+        <input class="auth-input" id="in-amount" type="number" placeholder="Montant €">
+        
+        <p style="font-size:0.7rem;text-align:left;color:#888;">DESTINATION :</p>
+        <div class="scope-selector">
+            <button class="scope-btn active" data-scope="me">POUR MOI</button>
+            <button class="scope-btn" data-scope="family">FAMILLE</button>
+        </div>
+
+        <button class="auth-btn" id="btn-confirm-add" style="background:var(--sage);">Enregistrer</button>
+        <button onclick="$('screen-add').classList.remove('active')" style="background:none;border:none;margin-top:15px;color:#888;font-size:0.8rem;">Annuler</button>
+    </div>
 </div>
 
 <script>
 const $ = id => document.getElementById(id);
+let currentScope = "me";
+let items = JSON.parse(localStorage.getItem('aurora_items') || "[]");
 
-// LOGIQUE DE DÉMARRAGE
-function startApp(prenom, codeFamille = null) {
-    if (prenom.length < 2) {
-        alert("Entrez votre prénom");
-        return;
-    }
+// NAVIGATION & SETUP
+$('btn-save-setup').onclick = () => {
+    const name = $('setup-name').value.trim();
+    const fcode = $('setup-fcode').value.trim();
+    if(!name) return alert("Prénom requis");
+    
+    localStorage.setItem('aurora_user', name);
+    localStorage.setItem('aurora_fcode', fcode);
+    initApp();
+};
 
-    localStorage.setItem('aurora_user', prenom);
-    $('user-name').textContent = prenom;
-
-    if (codeFamille) {
-        localStorage.setItem('aurora_fcode', codeFamille.toUpperCase());
-        $('family-status').textContent = "🏠 ESPACE FAMILLE : " + codeFamille.toUpperCase();
-        $('family-status').style.background = "#EBF0EB";
-        $('family-status').style.color = "#5C7A5F";
-        $('main-message').textContent = "Vous êtes connecté à un espace partagé.";
-    } else {
-        localStorage.removeItem('aurora_fcode');
-        $('family-status').textContent = "👤 MODE SOLO";
-        $('family-status').style.background = "#eee";
-        $('family-status').style.color = "#666";
-        $('main-message').textContent = "Ceci est votre espace personnel privé.";
-    }
-
+function initApp() {
     $('screen-auth').classList.remove('active');
     $('screen-main').classList.add('active');
+    const fcode = localStorage.getItem('aurora_fcode');
+    $('display-fcode').textContent = fcode ? "🏠 ESPACE PARTAGÉ : " + fcode.toUpperCase() : "👤 MODE SOLO";
+    renderItems();
 }
 
-function logout() {
-    localStorage.clear();
-    location.reload();
+// LOGIQUE D'AJOUT
+$('btn-add').onclick = () => $('screen-add').classList.add('active');
+
+document.querySelectorAll('.scope-btn').forEach(btn => {
+    btn.onclick = () => {
+        document.querySelectorAll('.scope-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentScope = btn.dataset.scope;
+    };
+});
+
+$('btn-confirm-add').onclick = () => {
+    const label = $('in-label').value;
+    const amount = $('in-amount').value;
+    if(!label || !amount) return;
+
+    const newItem = {
+        id: Date.now(),
+        label,
+        amount,
+        scope: currentScope, // Ici on stocke si c'est "me" ou "family"
+        date: new Date().toLocaleDateString()
+    };
+
+    items.push(newItem);
+    localStorage.setItem('aurora_items', JSON.stringify(items));
+    
+    // Reset et fermeture
+    $('in-label').value = ''; $('in-amount').value = '';
+    $('screen-add').classList.remove('active');
+    renderItems();
+};
+
+function renderItems() {
+    $('main-list').innerHTML = items.length ? "" : "<p style='color:#888;text-align:center;'>Aucune donnée</p>";
+    items.sort((a,b) => b.id - a.id).forEach(item => {
+        const card = document.createElement('div');
+        card.className = "item-card";
+        card.innerHTML = `
+            <div>
+                <div style="font-weight:700;">${item.label}</div>
+                <div class="tag ${item.scope === 'me' ? 'tag-me' : 'tag-family'}">
+                    ${item.scope === 'me' ? 'Personnel' : 'Famille'}
+                </div>
+            </div>
+            <div style="font-weight:800; font-size:1.1rem;">${item.amount} €</div>
+        `;
+        $('main-list').appendChild(card);
+    });
 }
 
-// ÉCOUTEURS D'ÉVÉNEMENTS
-$('btn-start').onclick = (e) => {
-    e.preventDefault();
-    startApp($('auth-prenom').value.trim());
-};
-
-$('btn-join').onclick = (e) => {
-    e.preventDefault();
-    const code = $('auth-fcode').value.trim();
-    if (code.length < 4) {
-        alert("Veuillez entrer un code famille valide");
-        return;
-    }
-    startApp($('auth-prenom').value.trim(), code);
-};
-
-// Gérer la touche "Entrée"
-$('auth-prenom').onkeypress = (e) => {
-    if (e.key === 'Enter') {
-        e.target.blur();
-        $('btn-start').click();
-    }
-};
-
-// Chargement initial
+// Check auto au chargement
 window.onload = () => {
-    const savedName = localStorage.getItem('aurora_user');
-    const savedCode = localStorage.getItem('aurora_fcode');
-    if (savedName) {
-        startApp(savedName, savedCode);
-    }
+    if(localStorage.getItem('aurora_user')) initApp();
 };
 </script>
 
