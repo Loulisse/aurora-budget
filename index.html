@@ -12,13 +12,13 @@
 
     <style>
         /* ============================================================
-           SECTION 1 : VARIABLES & BASE (Design)
+           SECTION 1 : VARIABLES & BASE
            ============================================================ */
         :root {
             --ivory: #FAFAF7; --ivory2: #F3F2ED; --ivory3: #EAE9E2;
             --ink: #1C1B18; --ink3: #8C8A82;
-            --sage: #5C7A5F; --sage-m: #C5D4C6;
-            --terra: #C4622D; --blue: #3B6B8C;
+            --sage: #5C7A5F; --sage-l: #EBF0EB; --sage-m: #C5D4C6;
+            --terra: #C4622D; --blue: #3B6B8C; --blue-l: #EBF2F8;
             --border: rgba(28,27,24,.1);
             --shadow-md: 0 4px 20px rgba(28,27,24,.1);
             --safe-t: env(safe-area-inset-top, 44px);
@@ -30,7 +30,6 @@
         *,*::before,*::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
         html, body { height: 100%; background: var(--ivory); color: var(--ink); font-family: var(--sans); overflow: hidden; -webkit-font-smoothing: antialiased; }
 
-        /* STRUCTURE DES ECRANS (Correctif Tactile) */
         .screen {
             position: absolute; inset: 0; display: flex; flex-direction: column;
             background: var(--ivory); opacity: 0; pointer-events: none;
@@ -39,10 +38,9 @@
         .screen.active { opacity: 1; pointer-events: all; z-index: 100 !important; }
 
         /* ============================================================
-           SECTION 2 : STYLES VISUELS (Connexion & Interface)
+           SECTION 2 : STYLES VISUELS
            ============================================================ */
         #screen-auth { justify-content: center; align-items: center; padding: 24px; text-align: center; }
-        
         .auth-blob {
             width: 120px; height: 120px; margin: 0 auto 20px;
             background: radial-gradient(circle at 40% 40%, var(--sage-m), var(--ivory2) 60%, var(--terra));
@@ -67,7 +65,6 @@
         .divider { display: flex; align-items: center; gap: 10px; margin: 20px 0; color: var(--ink3); font-size: .7rem; text-transform: uppercase; letter-spacing: 1px; }
         .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
 
-        /* TOPBAR & NAV */
         .topbar { padding: calc(var(--safe-t) + 10px) 20px 10px; }
         .topbar-name { font-family: var(--serif); font-size: 2rem; }
         .scroll-area { flex: 1; overflow-y: auto; padding: 20px; }
@@ -82,21 +79,17 @@
         .nav-icon { font-size: 1.4rem; display: block; margin-bottom: 4px; }
         .nav-item.active { color: var(--sage); }
 
-        /* [DEBUT ZONE COPIER-COLLER CSS - FUTURES FONCTIONS] */
-                /* Styles pour le Bilan */
+        /* [DEBUT ZONE COPIER-COLLER CSS - BILAN & REVENUS] */
         .card-balance {
             background: var(--ink); color: #fff; border-radius: 24px; padding: 24px;
             margin-bottom: 20px; box-shadow: var(--shadow-md);
         }
         .balance-label { font-size: .7rem; text-transform: uppercase; letter-spacing: 1px; opacity: .7; }
         .balance-amount { font-family: var(--serif); font-size: 2.8rem; margin: 5px 0; }
-        
         .split-balance { display: flex; gap: 15px; margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.1); }
         .split-item { flex: 1; }
         .split-val { font-weight: 700; font-size: 1.1rem; display: block; }
         .split-lab { font-size: 0.6rem; text-transform: uppercase; opacity: 0.7; }
-
-        /* Styles pour la liste d'activités */
         .section-title { font-family: var(--serif); font-size: 1.4rem; margin: 20px 0 12px; display: flex; justify-content: space-between; align-items: center; }
         .transaction-item {
             background: #fff; padding: 16px; border-radius: 18px; border: 1.5px solid var(--border);
@@ -108,23 +101,18 @@
         .tag-me { background: var(--blue-l); color: var(--blue); }
         .tag-family { background: var(--sage-l); color: var(--sage); }
         .item-amount { font-weight: 800; color: var(--sage); }
-
-        /* Bouton Flottant Ajout */
         .fab {
             position: fixed; bottom: calc(85px + var(--safe-b)); right: 20px;
             width: 56px; height: 56px; border-radius: 50%; background: var(--ink);
             color: #fff; border: none; font-size: 1.5rem; display: flex; align-items: center; justify-content: center;
             box-shadow: 0 8px 25px rgba(0,0,0,0.2); z-index: 90;
         }
-
-        /* Sélecteur de portée (Moi/Famille) */
         .scope-picker { display: flex; gap: 10px; margin: 15px 0; }
         .scope-opt { 
             flex: 1; padding: 12px; border-radius: 12px; border: 1.5px solid var(--border); 
-            background: var(--ivory); font-weight: 700; font-size: 0.8rem; cursor: pointer;
+            background: var(--ivory); font-weight: 700; font-size: 0.8rem; cursor: pointer; text-align: center;
         }
         .scope-opt.active { background: var(--ink); color: #fff; border-color: var(--ink); }
-        /* C'est ici que vous ajouterez les styles pour les factures, le bocal d'épargne, etc. */
         /* [FIN ZONE COPIER-COLLER CSS] */
 
     </style>
@@ -136,11 +124,9 @@
         <div class="screen active" id="screen-auth">
             <div class="auth-blob">🌿</div>
             <div class="auth-logo">Aurora</div>
-            
             <div class="auth-card">
                 <input class="auth-input" id="auth-prenom" type="text" placeholder="Ton prénom..." autocomplete="off">
                 <button class="auth-btn" id="btn-start">Accéder à mon espace →</button>
-
                 <div class="divider">Partage Famille</div>
                 <input class="auth-input" id="auth-fcode" type="text" placeholder="Code FAM-XXXXXX (Optionnel)">
                 <button class="auth-btn" id="btn-join" style="background:var(--sage);">Rejoindre un espace</button>
@@ -155,68 +141,9 @@
             </div>
 
             <div class="scroll-area" id="main-content">
-                <div style="text-align:center; color:var(--ink3); margin-top:40px; padding:20px; border:1px dashed var(--border); border-radius:20px;">
-                    <p>Votre structure est prête. ✨<br><br>Nous allons maintenant ajouter vos fonctions une par une.</p>
-                </div>
-                </div>
-
-            <nav class="bottomnav">
-                <button class="nav-item active"><span class="nav-icon">🏠</span>Bilan</button>
-                <button class="nav-item"><span class="nav-icon">📋</span>Factures</button>
-                <button class="nav-item"><span class="nav-icon">🔁</span>Fixes</button>
-                <button class="nav-item"><span class="nav-icon">🫙</span>Épargne</button>
-            </nav>
-        </div>
-
-        </div>
-
-    <script>
-        const $ = id => document.getElementById(id);
-
-        // --- FONCTION DE DEMARRAGE ---
-        function startApp(name, fcode) {
-            if (!name) return alert("Veuillez entrer votre prénom.");
-            
-            // Sauvegarde locale
-            localStorage.setItem('aurora_name', name);
-            if(fcode) localStorage.setItem('aurora_fcode', fcode.toUpperCase());
-
-            // Mise à jour interface
-            $('display-name').textContent = name;
-            $('display-status').textContent = fcode ? "🏠 ESPACE FAMILLE : " + fcode.toUpperCase() : "👤 MODE SOLO";
-            
-            // Changement d'écran
-            $('screen-auth').classList.remove('active');
-            $('screen-main').classList.add('active');
-        }
-
-        // --- ECOUTEURS ---
-        $('btn-start').onclick = (e) => {
-            e.preventDefault();
-            startApp($('auth-prenom').value.trim(), null);
-        };
-        
-        $('btn-join').onclick = (e) => {
-            e.preventDefault();
-            const name = $('auth-prenom').value.trim();
-            const code = $('auth-fcode').value.trim();
-            if(!code) return alert("Veuillez entrer un code famille.");
-            startApp(name, code);
-        };
-
-        // Gestion du clavier (Touche Entrée)
-        $('auth-prenom').onkeypress = (e) => { 
-            if(e.key === 'Enter') { 
-                e.target.blur(); 
-                $('btn-start').click(); 
-            } 
-        };
-
-        /* [DEBUT ZONE COPIER-COLLER JAVASCRIPT - LOGIQUE FONCTIONS] */
-                        <div class="card-balance">
+                <div class="card-balance">
                     <span class="balance-label">Solde Total</span>
                     <div class="balance-amount" id="total-balance">0,00 €</div>
-                    
                     <div class="split-balance">
                         <div class="split-item">
                             <span class="split-val" id="me-balance">0 €</span>
@@ -228,50 +155,70 @@
                         </div>
                     </div>
                 </div>
-
-                <div class="section-title">
-                    <span>Revenus</span>
+                <div class="section-title"><span>Revenus</span></div>
+                <div id="income-list"></div>
                 </div>
 
-                <div id="income-list">
-                    </div>
+            <nav class="bottomnav">
+                <button class="nav-item active"><span class="nav-icon">🏠</span>Bilan</button>
+                <button class="nav-item"><span class="nav-icon">📋</span>Factures</button>
+                <button class="nav-item"><span class="nav-icon">🔁</span>Fixes</button>
+                <button class="nav-item"><span class="nav-icon">🫙</span>Épargne</button>
+            </nav>
+            <button class="fab" id="btn-open-add">＋</button>
+        </div>
 
-                <button class="fab" id="btn-open-add">＋</button>
         <div class="screen" id="modal-add-income" style="background:rgba(0,0,0,0.4); justify-content:center; align-items:center; padding:20px;">
             <div class="auth-card" style="transform:none; opacity:1;">
                 <h3 style="font-family:var(--serif); font-size:1.5rem; margin-bottom:15px;">Ajouter un revenu</h3>
-                
                 <input class="auth-input" id="in-label" type="text" placeholder="Source (ex: Salaire, Vente...)">
                 <input class="auth-input" id="in-amount" type="number" placeholder="Montant en €">
-                
                 <p style="font-size:0.7rem; font-weight:700; color:var(--ink3); text-transform:uppercase;">C'est pour qui ?</p>
                 <div class="scope-picker">
                     <div class="scope-opt active" id="opt-me" onclick="setScope('me')">MOI</div>
                     <div class="scope-opt" id="opt-fam" onclick="setScope('family')">FAMILLE</div>
                 </div>
-
                 <button class="auth-btn" id="btn-save-income">Enregistrer le revenu</button>
                 <button class="auth-btn" onclick="$('modal-add-income').classList.remove('active')" style="background:none; color:var(--ink3); font-size:0.8rem; margin-top:5px;">Annuler</button>
             </div>
         </div>
+        </div>
+
+    <script>
+        const $ = id => document.getElementById(id);
+
+        function startApp(name, fcode) {
+            if (!name) return alert("Veuillez entrer votre prénom.");
+            localStorage.setItem('aurora_name', name);
+            if(fcode) localStorage.setItem('aurora_fcode', fcode.toUpperCase());
+            $('display-name').textContent = name;
+            $('display-status').textContent = fcode ? "🏠 ESPACE FAMILLE : " + fcode.toUpperCase() : "👤 MODE SOLO";
+            $('screen-auth').classList.remove('active');
+            $('screen-main').classList.add('active');
+            renderData(); // On affiche les données après connexion
+        }
+
+        $('btn-start').onclick = (e) => { e.preventDefault(); startApp($('auth-prenom').value.trim(), null); };
+        $('btn-join').onclick = (e) => { 
+            e.preventDefault(); 
+            startApp($('auth-prenom').value.trim(), $('auth-fcode').value.trim()); 
+        };
+
+        /* [DEBUT ZONE COPIER-COLLER JAVASCRIPT] */
         let currentScope = 'me';
         let transactions = JSON.parse(localStorage.getItem('aurora_tx') || '[]');
 
-        // Changer la destination (Moi ou Famille)
         window.setScope = (scope) => {
             currentScope = scope;
             $('opt-me').classList.toggle('active', scope === 'me');
             $('opt-fam').classList.toggle('active', scope === 'family');
         };
 
-        // Ouvrir/Fermer la modale
         $('btn-open-add').onclick = () => $('modal-add-income').classList.add('active');
 
-        // Enregistrer une donnée
         $('btn-save-income').onclick = () => {
             const label = $('in-label').value.trim();
             const amount = parseFloat($('in-amount').value);
-
             if (!label || isNaN(amount)) return alert("Remplissez les champs correctement.");
 
             const tx = {
@@ -284,28 +231,21 @@
 
             transactions.push(tx);
             localStorage.setItem('aurora_tx', JSON.stringify(transactions));
-            
-            // Reset
             $('in-label').value = ''; $('in-amount').value = '';
             $('modal-add-income').classList.remove('active');
-            
             renderData();
         };
 
-        // Afficher les données et calculer le bilan
         function renderData() {
             const list = $('income-list');
+            if(!list) return;
             list.innerHTML = transactions.length === 0 ? '<p style="text-align:center; color:var(--ink3); font-size:0.8rem;">Aucun revenu enregistré</p>' : '';
 
-            let total = 0;
-            let totalMe = 0;
-            let totalFam = 0;
+            let total = 0, totalMe = 0, totalFam = 0;
 
-            // Trier du plus récent au plus ancien
             transactions.sort((a, b) => b.id - a.id).forEach(t => {
                 total += t.amount;
-                if (t.scope === 'me') totalMe += t.amount;
-                else totalFam += t.amount;
+                if (t.scope === 'me') totalMe += t.amount; else totalFam += t.amount;
 
                 const div = document.createElement('div');
                 div.className = 'transaction-item';
@@ -314,37 +254,23 @@
                         <span class="item-label">${t.label}</span>
                         <span class="item-tag ${t.scope === 'me' ? 'tag-me' : 'tag-family'}">
                             ${t.scope === 'me' ? 'Personnel' : 'Famille'}
-                        </div>
+                        </span>
                     </div>
                     <div class="item-amount">+ ${t.amount.toLocaleString()} €</div>
                 `;
                 list.appendChild(div);
             });
 
-            // Mettre à jour les chiffres du bilan
             $('total-balance').textContent = total.toLocaleString() + ' €';
             $('me-balance').textContent = totalMe.toLocaleString() + ' €';
             $('fam-balance').textContent = totalFam.toLocaleString() + ' €';
         }
-
-        // On lance l'affichage au démarrage
-        // (On rajoute l'appel à renderData dans votre fonction startApp existante)
-        const originalStartApp = startApp;
-        startApp = function(name, fcode) {
-            originalStartApp(name, fcode);
-            renderData();
-        };
-
-        /* Ici, nous ajouterons les calculs de factures, les sauvegardes de revenus, etc. */
         /* [FIN ZONE COPIER-COLLER JAVASCRIPT] */
 
-        // --- VERIFICATION AUTOMATIQUE AU CHARGEMENT ---
         window.onload = () => {
             const savedName = localStorage.getItem('aurora_name');
             const savedCode = localStorage.getItem('aurora_fcode');
-            if (savedName) {
-                startApp(savedName, savedCode);
-            }
+            if (savedName) startApp(savedName, savedCode);
         };
     </script>
 </body>
