@@ -113,6 +113,25 @@
             background: var(--ivory); font-weight: 700; font-size: 0.8rem; cursor: pointer; text-align: center;
         }
         .scope-opt.active { background: var(--ink); color: #fff; border-color: var(--ink); }
+        
+                /* Styles pour les factures (Dépenses) */
+        .tag-expense { background: #F8EBEB; color: #C4622D; } /* Rouge/Orange pour les dépenses */
+        .item-amount.expense { color: #C4622D; }
+        
+        /* Animation pour les onglets */
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Style des boutons dans la modale pour différencier Revenu/Dépense */
+        .btn-type-selector { display: flex; gap: 10px; margin-bottom: 15px; }
+        .type-opt { 
+            flex: 1; padding: 10px; border-radius: 10px; border: 1.5px solid var(--border); 
+            font-size: 0.7rem; font-weight: 800; cursor: pointer; text-align: center;
+        }
+        .type-opt.active.rev { background: var(--sage); color: white; border-color: var(--sage); }
+        .type-opt.active.exp { background: var(--terra); color: white; border-color: var(--terra); }
+
         /* [FIN ZONE COPIER-COLLER CSS] */
 
     </style>
@@ -205,6 +224,28 @@
         };
 
         /* [DEBUT ZONE COPIER-COLLER JAVASCRIPT] */
+                <div class="screen" id="modal-add-entry" style="background:rgba(0,0,0,0.4); justify-content:center; align-items:center; padding:20px;">
+            <div class="auth-card" style="transform:none; opacity:1;">
+                <h3 id="modal-title" style="font-family:var(--serif); font-size:1.5rem; margin-bottom:15px;">Nouvelle entrée</h3>
+                
+                <div class="btn-type-selector">
+                    <div class="type-opt rev active" id="type-rev" onclick="setType('income')">REVENU</div>
+                    <div class="type-opt exp" id="type-exp" onclick="setType('expense')">FACTURE</div>
+                </div>
+
+                <input class="auth-input" id="in-label" type="text" placeholder="Libellé (ex: Loyer, Salaire...)">
+                <input class="auth-input" id="in-amount" type="number" placeholder="Montant en €">
+                
+                <p style="font-size:0.7rem; font-weight:700; color:var(--ink3); text-transform:uppercase;">Destination :</p>
+                <div class="scope-picker">
+                    <div class="scope-opt active" id="opt-me" onclick="setScope('me')">MOI</div>
+                    <div class="scope-opt" id="opt-fam" onclick="setScope('family')">FAMILLE</div>
+                </div>
+
+                <button class="auth-btn" id="btn-save-entry" style="background:var(--ink);">Enregistrer</button>
+                <button class="auth-btn" onclick="$('modal-add-entry').classList.remove('active')" style="background:none; color:var(--ink3); font-size:0.8rem; margin-top:5px;">Annuler</button>
+            </div>
+        </div>
         let currentScope = 'me';
         let transactions = JSON.parse(localStorage.getItem('aurora_tx') || '[]');
 
@@ -266,6 +307,97 @@
             $('fam-balance').textContent = totalFam.toLocaleString() + ' €';
         }
         /* [FIN ZONE COPIER-COLLER JAVASCRIPT] */
+        let currentScope = 'me';
+        let currentType = 'income'; // 'income' ou 'expense'
+        let transactions = JSON.parse(localStorage.getItem('aurora_tx') || '[]');
+
+        // Changer Moi / Famille
+        window.setScope = (scope) => {
+            currentScope = scope;
+            $('opt-me').classList.toggle('active', scope === 'me');
+            $('opt-fam').classList.toggle('active', scope === 'family');
+        };
+
+        // Changer Revenu / Facture
+        window.setType = (type) => {
+            currentType = type;
+            $('type-rev').classList.toggle('active', type === 'income');
+            $('type-exp').classList.toggle('active', type === 'expense');
+            $('btn-save-entry').style.background = (type === 'income') ? 'var(--sage)' : 'var(--terra)';
+        };
+
+        // Ouvrir la modale
+        $('btn-open-add').onclick = () => {
+            setType('income'); // Par défaut
+            $('modal-add-entry').classList.add('active');
+        };
+
+        // Sauvegarder
+        $('btn-save-entry').onclick = () => {
+            const label = $('in-label').value.trim();
+            const amount = parseFloat($('in-amount').value);
+
+            if (!label || isNaN(amount)) return alert("Veuillez remplir les champs");
+
+            const tx = {
+                id: Date.now(),
+                label: label,
+                amount: amount,
+                type: currentType, // On enregistre si c'est + ou -
+                scope: currentScope,
+                date: new Date().toLocaleDateString('fr-FR')
+            };
+
+            transactions.push(tx);
+            localStorage.setItem('aurora_tx', JSON.stringify(transactions));
+            
+            // Reset et fermeture
+            $('in-label').value = ''; $('in-amount').value = '';
+            $('modal-add-entry').classList.remove('active');
+            renderData();
+        };
+
+        function renderData() {
+            const list = $('income-list');
+            if(!list) return;
+            list.innerHTML = transactions.length === 0 ? '<p style="text-align:center; color:var(--ink3); font-size:0.8rem;">Aucune activité</p>' : '';
+
+            let totalBalance = 0;
+            let totalMe = 0;
+            let totalFam = 0;
+
+            transactions.sort((a, b) => b.id - a.id).forEach(t => {
+                // Calcul du solde (si dépense, on soustrait)
+                const realAmount = (t.type === 'expense') ? -t.amount : t.amount;
+                
+                totalBalance += realAmount;
+                if (t.scope === 'me') totalMe += realAmount;
+                else totalFam += realAmount;
+
+                const div = document.createElement('div');
+                div.className = 'transaction-item';
+                div.innerHTML = `
+                    <div class="item-info">
+                        <span class="item-label">${t.label}</span>
+                        <span class="item-tag ${t.scope === 'me' ? 'tag-me' : 'tag-family'}">
+                            ${t.scope === 'me' ? 'Personnel' : 'Famille'}
+                        </span>
+                    </div>
+                    <div class="item-amount ${t.type === 'expense' ? 'expense' : ''}">
+                        ${t.type === 'expense' ? '-' : '+'} ${t.amount.toLocaleString()} €
+                    </div>
+                `;
+                list.appendChild(div);
+            });
+
+            // Mise à jour des chiffres
+            $('total-balance').textContent = totalBalance.toLocaleString() + ' €';
+            $('me-balance').textContent = totalMe.toLocaleString() + ' €';
+            $('fam-balance').textContent = totalFam.toLocaleString() + ' €';
+            
+            // Couleur du solde si négatif
+            $('total-balance').style.color = (totalBalance < 0) ? 'var(--terra)' : 'white';
+        }
 
         window.onload = () => {
             const savedName = localStorage.getItem('aurora_name');
