@@ -705,11 +705,9 @@ var p=gid(‘auth-prenom’).value.trim();
 var raw=gid(‘auth-fcode’).value.trim().toUpperCase();
 if(!p){toast(‘Entrez votre prénom d'abord’,‘e’);gid(‘auth-prenom’).focus();return;}
 if(!raw.startsWith(‘FAM-’)){toast(‘Code invalide (ex: FAM-AB3K9Z-BINID)’,‘e’);return;}
-var decoded=decodeFamilyCode(raw);
 S.familyId=raw;
 startApp(p, null);
 pullFamily(function(){ renderBilan(); toast(‘Famille synchronisée 👨‍👩‍👧’); });
-else toast(‘Code rejoint (sans bin cloud)’,‘i’);
 };
 gid(‘auth-prenom’).addEventListener(‘keydown’,function(e){if(e.key===‘Enter’)onBtnStart();});
 
@@ -771,7 +769,7 @@ el.innerHTML=’<div style="font-size:.7rem;background:var(--gold-l);color:var(-
 +’<input class="f-input" id="token-input" type="password" placeholder="ghp_…" style="flex:1;font-size:13px;"/>’
 +’<button class="btn btn-sage btn-sm" onclick="saveToken()">Activer</button>’
 +’</div>’
-+’<div style="font-size:.63rem;color:var(--ink3);line-height:1.5;">Ce code vous est fourni par la personne qui a créé l’espace famille. Il n’est jamais envoyé nulle part sauf à GitHub pour synchroniser vos données.</div>’;
++’<div style="font-size:.63rem;color:var(--ink3);line-height:1.5;">Ce code est fourni par le créateur de l'espace famille. Il est stocké uniquement sur cet appareil.</div>’;
 }
 }
 window.saveToken = function(){
