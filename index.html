@@ -554,7 +554,7 @@ var currentBocId = null;
 //    Coche “repo” → Generate token → copie la valeur
 // 2. Colle ton token dans GH_TOKEN ci-dessous
 // ════════════════════════════════════════════════════
-var GH_TOKEN = ‘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’;
+var GH_TOKEN = ‘’; // chargé depuis localStorage au démarrage
 var GH_OWNER = ‘Loulisse’;   // ton nom d’utilisateur GitHub
 var GH_REPO  = ‘aurora-budget’;
 var GH_FILE  = ‘family-data.json’;
@@ -579,8 +579,8 @@ d.style.cssText=‘left:’+(x+(Math.random()-.5)*80)+‘px;top:’+y+‘px;back
 document.body.appendChild(d); setTimeout(function(){d.remove();},1200);
 });
 }
-function save(){ localStorage.setItem(LS,JSON.stringify(S)); }
-function load(){ try{var r=localStorage.getItem(LS);if(r)Object.assign(S,JSON.parse(r));}catch(e){} }
+function save(){ localStorage.setItem(LS,JSON.stringify(S)); if(GH_TOKEN) localStorage.setItem(‘aurora_gh_token’,GH_TOKEN); }
+function load(){ try{var r=localStorage.getItem(LS);if(r)Object.assign(S,JSON.parse(r));}catch(e){} GH_TOKEN=localStorage.getItem(‘aurora_gh_token’)||’’; }
 
 // ── GITHUB SYNC ──────────────────────────────────────
 function ghHeaders(){
@@ -755,15 +755,40 @@ gid(‘p-join’).value=’’; gid(‘p-fcode’).value=raw;
 function renderProfile(){
 gid(‘p-prenom’).value=S.prenom||’’;
 gid(‘p-fcode’).value=S.familyId||’’;
-gid(‘profile-info’).innerHTML=’<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;"><div class="topbar-avatar" style="width:46px;height:46px;">’+((S.prenom||‘A’)[0].toUpperCase())+’</div><div><div style="font-weight:700;">’+(S.prenom||‘Vous’)+’</div><div style="font-size:.7rem;color:var(--ink3);margin-top:2px;">’+(S.familyId||’—’)+’</div></div></div>’;
+var tokenStatus = GH_TOKEN
+? ‘<div style="font-size:.68rem;color:var(--sage);margin-top:2px;">🔑 Token actif — <button onclick="removeToken()" style="background:none;border:none;color:var(--red);font-size:.68rem;cursor:pointer;text-decoration:underline;padding:0;">Supprimer</button></div>’
+: ‘<div style="font-size:.68rem;color:var(--gold);margin-top:2px;">🔑 Aucun token — sync désactivée</div>’;
+gid(‘profile-info’).innerHTML=’<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;"><div class="topbar-avatar" style="width:46px;height:46px;">’+((S.prenom||‘A’)[0].toUpperCase())+’</div><div><div style="font-weight:700;">’+(S.prenom||‘Vous’)+’</div><div style="font-size:.7rem;color:var(--ink3);margin-top:2px;">’+(S.familyId||’—’)+’</div>’+tokenStatus+’</div></div>’;
 updateSyncStatus();
 }
 function updateSyncStatus(){
 var el=gid(‘sync-status’); if(!el) return;
-el.innerHTML = GH_TOKEN
-? ‘<div style="font-size:.7rem;background:var(--sage-l);color:var(--sage);padding:8px 12px;border-radius:10px;font-weight:600;">☁️ Sync GitHub active — données partagées en temps réel</div>’
-: ‘<div style="font-size:.7rem;background:var(--gold-l);color:var(--gold);padding:8px 12px;border-radius:10px;font-weight:600;">⚠️ Token GitHub manquant — synchronisation désactivée. Voir profil.</div>’;
+if(GH_TOKEN){
+el.innerHTML=’<div style="font-size:.7rem;background:var(--sage-l);color:var(--sage);padding:8px 12px;border-radius:10px;font-weight:600;margin-bottom:10px;">☁️ Sync famille active</div>’;
+} else {
+el.innerHTML=’<div style="font-size:.7rem;background:var(--gold-l);color:var(--gold);padding:8px 12px;border-radius:10px;font-weight:600;margin-bottom:8px;">🔑 Entrez le token de synchronisation pour partager avec votre famille</div>’
++’<div style="display:flex;gap:8px;margin-bottom:4px;">’
++’<input class="f-input" id="token-input" type="password" placeholder="ghp_…" style="flex:1;font-size:13px;"/>’
++’<button class="btn btn-sage btn-sm" onclick="saveToken()">Activer</button>’
++’</div>’
++’<div style="font-size:.63rem;color:var(--ink3);line-height:1.5;">Ce code vous est fourni par la personne qui a créé l’espace famille. Il n’est jamais envoyé nulle part sauf à GitHub pour synchroniser vos données.</div>’;
 }
+}
+window.saveToken = function(){
+var t=gid(‘token-input’);
+if(!t||!t.value.trim()){toast(‘Entrez le token’,‘e’);return;}
+GH_TOKEN=t.value.trim();
+localStorage.setItem(‘aurora_gh_token’,GH_TOKEN);
+updateSyncStatus();
+syncFamily();
+toast(‘Synchronisation activée ✓’);
+};
+window.removeToken = function(){
+GH_TOKEN=’’;
+localStorage.removeItem(‘aurora_gh_token’);
+updateSyncStatus();
+toast(‘Token supprimé’);
+};
 
 // ── CALCULS ──────────────────────────────────────────
 function calcCap(){
