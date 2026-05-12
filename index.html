@@ -274,16 +274,13 @@ html,body{height:100%;background:var(--ivory);color:var(--ink);font-family:var(-
   <div class="auth-tagline">Votre budget, avec amour</div>
   <div class="auth-card">
     <div class="auth-card-title">Bienvenue ✨</div>
-    <div class="auth-card-sub">Entrez votre prénom pour accéder à votre espace. Vos données sont synchronisées avec votre famille.</div>
-    <input class="auth-input" id="auth-prenom" type="text" placeholder="Votre prénom…" maxlength="30" autocomplete="given-name"/>
-    <button class="auth-btn-main" onclick="onBtnStart()">Accéder à Aurora →</button>
-    <div class="auth-divider">ou rejoindre un espace famille</div>
-    <div style="font-size:.72rem;color:var(--ink3);margin-bottom:8px;">Code partagé par votre partenaire :</div>
-    <div class="auth-row">
-      <input class="auth-family-input" id="auth-fcode" type="text" placeholder="FAM-XXXXXX" maxlength="14" oninput="this.value=this.value.toUpperCase()"/>
-      <button class="auth-family-btn" onclick="onBtnJoin()">Rejoindre</button>
-    </div>
-    <div class="auth-note">💡 Le code famille synchronise vos données en temps réel avec votre partenaire via le cloud.</div>
+    <div class="auth-card-sub">Entrez votre prénom pour accéder à votre espace.</div>
+    <form id="auth-form" onsubmit="handleAuthSubmit(event)">
+      <input class="auth-input" id="auth-prenom" name="prenom" type="text" placeholder="Votre prénom…" maxlength="30" autocomplete="given-name" required/>
+      <input class="auth-input" id="auth-fcode" name="fcode" type="text" placeholder="Code famille (optionnel : FAM-XXXXXX)" maxlength="14" oninput="this.value=this.value.toUpperCase()" autocomplete="off"/>
+      <button type="submit" class="auth-btn-main">Accéder à Aurora →</button>
+    </form>
+    <div class="auth-note">💡 Le code famille permet de partager vos données avec votre partenaire. Laissez vide si vous utilisez l'app seul(e).</div>
   </div>
 </div>
 
