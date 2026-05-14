@@ -686,10 +686,7 @@ gid(‘fab-menu’).classList.remove(‘open’);
 gid(‘fab-main’).style.transform=’’;
 gid(‘fab-main’).style.background=’’;
 };
-// Close sheet by clicking overlay
-document.querySelectorAll(’.sheet-overlay’).forEach(function(el){
-el.addEventListener(‘click’,function(e){if(e.target===el)closeSheet(el.id);});
-});
+// overlay close listeners added in window.onload
 
 // ── AUTH ─────────────────────────────────────────────
 window.onBtnStart = function(){
@@ -706,7 +703,7 @@ S.familyId=raw;
 startApp(p, null);
 pullFamily(function(){ renderBilan(); toast(‘Famille synchronisée 👨‍👩‍👧’); });
 };
-gid(‘auth-prenom’).addEventListener(‘keydown’,function(e){if(e.key===‘Enter’)onBtnStart();});
+// keydown handled by form submit
 
 function startApp(prenom, fcode){
 S.prenom=prenom;
@@ -1374,6 +1371,10 @@ reader.readAsDataURL(file);
 // ── INIT ─────────────────────────────────────────────
 window.onload = function(){
 load();
+// Close sheet by clicking overlay
+document.querySelectorAll(’.sheet-overlay’).forEach(function(el){
+el.addEventListener(‘click’,function(e){if(e.target===el)closeSheet(el.id);});
+});
 if(S.prenom){
 gid(‘screen-auth’).classList.remove(‘active’);
 gid(‘screen-main’).classList.add(‘active’);
