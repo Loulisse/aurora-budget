@@ -452,7 +452,7 @@ function confetti(x,y){[’#5C7A5F’,’#C4622D’,’#C9943A’,’#3B6B8C’,
 function save(){localStorage.setItem(LS,JSON.stringify(S));}
 function load(){try{var r=localStorage.getItem(LS);if(r)Object.assign(S,JSON.parse(r));}catch(e){}GH_TOKEN=localStorage.getItem(‘aurora_gh_token’)||’’;}
 function ghH(){return{‘Authorization’:‘token ‘+GH_TOKEN,‘Accept’:‘application/vnd.github.v3+json’,‘Content-Type’:‘application/json’};}
-function ghRead(cb){if(!GH_TOKEN){cb(null,null);return;}fetch(GH_API+’?t=’+Date.now(),{headers:ghH()}).then(function(r){return r.ok?r.json():null;}).then(function(j){if(!j||!j.content){cb(null,null);return;}try{cb(JSON.parse(atob(j.content.replace(/\n/g,’’))),j.sha);}catch(e){cb(null,null);}}).catch(function(){cb(null,null);});}
+function ghRead(cb){if(!GH_TOKEN){cb(null,null);return;}fetch(GH_API+’?t=’+Date.now(),{headers:ghH()}).then(function(r){if(r.status===404){cb(null,null);return null;}return r.ok?r.json():null;}).then(function(j){if(!j){cb(null,null);return;}if(!j.content){cb(null,null);return;}try{cb(JSON.parse(atob(j.content.replace(/\n/g,’’))),j.sha);}catch(e){cb(null,null);}}).catch(function(){cb(null,null);});}
 function ghWrite(data,sha,cb){if(!GH_TOKEN){if(cb)cb(false);return;}var body={message:‘Aurora sync ‘+new Date().toISOString(),content:btoa(unescape(encodeURIComponent(JSON.stringify(data,null,2)))),branch:‘main’};if(sha)body.sha=sha;fetch(GH_API,{method:‘PUT’,headers:ghH(),body:JSON.stringify(body)}).then(function(r){if(cb)cb(r.ok);}).catch(function(){if(cb)cb(false);});}
 function getFP(){return{familyId:S.familyId,lastUpdate:Date.now(),incomes:S.incomes.filter(function(x){return x.scope===‘family’;}),factures:S.factures.filter(function(x){return x.scope===‘family’;}),charges:S.charges.filter(function(x){return x.scope===‘family’;}),bocaux:S.bocaux.filter(function(x){return x.scope===‘family’;})};}
 function mergeFam(r){if(!r)return;S.incomes=S.incomes.filter(function(x){return x.scope!==‘family’;}).concat(r.incomes||[]);S.factures=S.factures.filter(function(x){return x.scope!==‘family’;}).concat(r.factures||[]);S.charges=S.charges.filter(function(x){return x.scope!==‘family’;}).concat(r.charges||[]);S.bocaux=S.bocaux.filter(function(x){return x.scope!==‘family’;}).concat(r.bocaux||[]);save();}
@@ -475,7 +475,7 @@ S.prenom=p;save();
 document.getElementById(‘screen-auth’).classList.remove(‘active’);
 document.getElementById(‘screen-main’).classList.add(‘active’);
 updateBar();renderBilan();
-if(GH_TOKEN)pullFam(function(){renderBilan();});
+if(GH_TOKEN)setTimeout(function(){pullFam(function(){renderBilan();});},500);
 } catch(err) {
 alert(‘Erreur login: ‘+err.message);
 }
