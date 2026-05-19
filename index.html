@@ -226,24 +226,20 @@ html,body{height:100%;background:var(--ivory);color:var(--ink);font-family:var(-
 <canvas id="qr-cv" style="display:none;"></canvas>
 <canvas id="dl-cv" style="display:none;"></canvas>
 
-<!-- AUTH -->
-
 <div class="screen active" id="screen-auth">
   <div class="auth-blob">&#127807;</div>
   <div class="auth-logo">Aurora</div>
   <div class="auth-tagline">Votre budget, avec amour</div>
   <div class="auth-card">
-    <div class="auth-card-title">Bienvenue &#10024;</div>
-    <div class="auth-card-sub">Entrez votre prenom pour acceder a votre espace personnel.</div>
+    <div class="auth-card-title">Bienvenue</div>
+    <div class="auth-card-sub">Entrez votre prenom pour acceder a votre espace.</div>
     <input class="auth-input" id="auth-prenom" type="text" placeholder="Votre prenom..." maxlength="30" autocomplete="given-name"/>
     <div class="auth-divider">code famille (optionnel)</div>
     <input class="auth-input" id="auth-fcode" type="text" placeholder="FAM-XXXXXX" maxlength="14" style="text-transform:uppercase;letter-spacing:.06em;margin-bottom:14px;"/>
-    <button class="auth-submit" id="btn-entrer" type="button" onclick="doLogin()">Acceder a Aurora</button>
-    <div class="auth-note">Sans code famille, vos donnees restent privees sur cet appareil. Avec un code partage, les elements familiaux se synchronisent avec votre partenaire.</div>
+    <button class="auth-submit" type="button" id="btn-login">Acceder a Aurora</button>
+    <div class="auth-note">Sans code famille, vos donnees restent privees sur cet appareil.</div>
   </div>
 </div>
-
-<!-- MAIN -->
 
 <div class="screen" id="screen-main">
   <div class="statusbar"></div>
@@ -291,15 +287,13 @@ html,body{height:100%;background:var(--ivory);color:var(--ink);font-family:var(-
   </div>
 </div>
 
-<!-- SHEET PROFILE -->
-
 <div class="sheet-overlay" id="sheet-profile">
   <div class="sheet"><div class="sheet-pill"></div>
     <div class="sheet-header"><div class="sheet-title">Mon profil</div><button class="sheet-close" onclick="closeSheet('sheet-profile')">x</button></div>
     <div class="sheet-body">
       <div id="profile-info" style="margin-bottom:16px;"></div>
       <div class="f-group"><label class="f-label">Prenom</label><input class="f-input" id="p-prenom" type="text"/></div>
-      <div class="f-group"><label class="f-label">Mon code famille (a partager)</label>
+      <div class="f-group"><label class="f-label">Mon code famille</label>
         <div style="display:flex;gap:8px;"><input class="f-input" id="p-fcode" readonly style="font-family:monospace;letter-spacing:.1em;flex:1;"/>
         <button class="btn btn-outline btn-sm" onclick="copyCode()" type="button">Copier</button></div>
       </div>
@@ -313,8 +307,6 @@ html,body{height:100%;background:var(--ivory);color:var(--ink);font-family:var(-
     </div>
   </div>
 </div>
-
-<!-- SHEET INCOME -->
 
 <div class="sheet-overlay" id="sheet-add-income">
   <div class="sheet"><div class="sheet-pill"></div>
@@ -336,8 +328,6 @@ html,body{height:100%;background:var(--ivory);color:var(--ink);font-family:var(-
   </div>
 </div>
 
-<!-- SHEET FACTURE -->
-
 <div class="sheet-overlay" id="sheet-add-facture">
   <div class="sheet"><div class="sheet-pill"></div>
     <div class="sheet-header"><div class="sheet-title" id="fac-title">Facture</div><button class="sheet-close" onclick="closeSheet('sheet-add-facture');stopCams()">x</button></div>
@@ -353,13 +343,11 @@ html,body{height:100%;background:var(--ivory);color:var(--ink);font-family:var(-
             <div class="cam-line"></div>
           </div></div>
         </div>
-        <div style="font-size:.68rem;color:var(--ink3);margin-top:6px;">Appuyez sur la video pour capturer la photo et lire le QR code</div>
+        <div style="font-size:.68rem;color:var(--ink3);margin-top:6px;">Appuyez sur la video pour capturer</div>
         <div class="qr-ok" id="qr-ok">QR lu - informations remplies</div>
         <img id="photo-thumb" class="photo-thumb" alt=""/>
         <canvas id="photo-canvas" style="display:none;"></canvas>
-        <div style="margin-top:8px;">
-          <label class="btn btn-outline btn-sm" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;width:auto;">Importer un fichier<input type="file" id="file-input" accept="image/*,application/pdf" style="display:none" onchange="handleFile(event)"/></label>
-        </div>
+        <div style="margin-top:8px;"><label class="btn btn-outline btn-sm" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;width:auto;">Importer<input type="file" id="file-input" accept="image/*,application/pdf" style="display:none" onchange="handleFile(event)"/></label></div>
       </div>
       <div class="f-group"><label class="f-label">Emetteur *</label><input class="f-input" type="text" id="fac-nom" placeholder="Swisscom, Loyer..."/></div>
       <div class="f-group"><label class="f-label">Montant (CHF) *</label><input class="f-input" type="number" id="fac-montant" placeholder="0.00" inputmode="decimal" step="0.01"/></div>
@@ -384,8 +372,6 @@ html,body{height:100%;background:var(--ivory);color:var(--ink);font-family:var(-
   </div>
 </div>
 
-<!-- SHEET CHARGE -->
-
 <div class="sheet-overlay" id="sheet-add-charge">
   <div class="sheet"><div class="sheet-pill"></div>
     <div class="sheet-header"><div class="sheet-title" id="ch-title">Charge fixe</div><button class="sheet-close" onclick="closeSheet('sheet-add-charge')">x</button></div>
@@ -406,8 +392,6 @@ html,body{height:100%;background:var(--ivory);color:var(--ink);font-family:var(-
     </div>
   </div>
 </div>
-
-<!-- SHEET BOCAL -->
 
 <div class="sheet-overlay" id="sheet-add-bocal">
   <div class="sheet"><div class="sheet-pill"></div>
@@ -430,32 +414,16 @@ html,body{height:100%;background:var(--ivory);color:var(--ink);font-family:var(-
   </div>
 </div>
 
-<!-- DETAIL FACTURE -->
-
 <div class="sheet-overlay" id="sheet-df">
   <div class="sheet"><div class="sheet-pill"></div>
-    <div class="sheet-header">
-      <div class="sheet-title" id="df-title">Facture</div>
-      <div style="display:flex;gap:8px;">
-        <button class="edit-btn" onclick="editFac()" type="button">Modifier</button>
-        <button class="sheet-close" onclick="closeSheet('sheet-df')">x</button>
-      </div>
-    </div>
+    <div class="sheet-header"><div class="sheet-title" id="df-title">Facture</div><button class="sheet-close" onclick="closeSheet('sheet-df')">x</button></div>
     <div class="sheet-body" id="df-body"></div>
   </div>
 </div>
 
-<!-- DETAIL BOCAL -->
-
 <div class="sheet-overlay" id="sheet-db">
   <div class="sheet"><div class="sheet-pill"></div>
-    <div class="sheet-header">
-      <div class="sheet-title" id="db-title">Bocal</div>
-      <div style="display:flex;gap:8px;">
-        <button class="edit-btn" onclick="editBoc()" type="button">Modifier</button>
-        <button class="sheet-close" onclick="closeSheet('sheet-db')">x</button>
-      </div>
-    </div>
+    <div class="sheet-header"><div class="sheet-title" id="db-title">Bocal</div><button class="sheet-close" onclick="closeSheet('sheet-db')">x</button></div>
     <div class="sheet-body" id="db-body"></div>
   </div>
 </div>
@@ -463,13 +431,14 @@ html,body{height:100%;background:var(--ivory);color:var(--ink);font-family:var(-
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jsqr/1.4.0/jsQR.min.js"></script>
 <script>
-var GH_OWNER='Loulisse',GH_REPO='aurora-budget',GH_FILE='family-data.json';
-var GH_API='https://api.github.com/repos/'+GH_OWNER+'/'+GH_REPO+'/contents/'+GH_FILE;
-var LS='aurora_v8';
-var S={prenom:'',familyId:null,incomes:[],factures:[],charges:[],bocaux:[]};
-var GH_TOKEN='';
-var selPrio=3,scopes={inc:'personal',fac:'personal',ch:'personal',boc:'personal'};
-var facFilter='urgent',fabOpen=false;
+
+var GH_OWNER=‘Loulisse’,GH_REPO=‘aurora-budget’,GH_FILE=‘family-data.json’;
+var GH_API=‘https://api.github.com/repos/’+GH_OWNER+’/’+GH_REPO+’/contents/’+GH_FILE;
+var LS=‘aurora_v8’;
+var S={prenom:’’,familyId:null,incomes:[],factures:[],charges:[],bocaux:[]};
+var GH_TOKEN=’’;
+var selPrio=3,scopes={inc:‘personal’,fac:‘personal’,ch:‘personal’,boc:‘personal’};
+var facFilter=‘urgent’,fabOpen=false;
 var camStream=null,scanTick=null,currentPhoto=null;
 var curFacId=null,curBocId=null,syncTimer=null;
 
@@ -482,7 +451,6 @@ function toast(msg,t){var el=gid(‘toast’);el.textContent=msg;el.className=�
 function confetti(x,y){[’#5C7A5F’,’#C4622D’,’#C9943A’,’#3B6B8C’,’#C4393B’].forEach(function(c,i){var d=document.createElement(‘div’);d.className=‘confetti-dot’;d.style.cssText=‘left:’+(x+(Math.random()-.5)*80)+‘px;top:’+y+‘px;background:’+c+’;animation-delay:’+(i*.06)+‘s’;document.body.appendChild(d);setTimeout(function(){d.remove();},1200);});}
 function save(){localStorage.setItem(LS,JSON.stringify(S));}
 function load(){try{var r=localStorage.getItem(LS);if(r)Object.assign(S,JSON.parse(r));}catch(e){}GH_TOKEN=localStorage.getItem(‘aurora_gh_token’)||’’;}
-
 function ghH(){return{‘Authorization’:‘token ‘+GH_TOKEN,‘Accept’:‘application/vnd.github.v3+json’,‘Content-Type’:‘application/json’};}
 function ghRead(cb){if(!GH_TOKEN){cb(null,null);return;}fetch(GH_API+’?t=’+Date.now(),{headers:ghH()}).then(function(r){return r.ok?r.json():null;}).then(function(j){if(!j||!j.content){cb(null,null);return;}try{cb(JSON.parse(atob(j.content.replace(/\n/g,’’))),j.sha);}catch(e){cb(null,null);}}).catch(function(){cb(null,null);});}
 function ghWrite(data,sha,cb){if(!GH_TOKEN){if(cb)cb(false);return;}var body={message:‘Aurora sync ‘+new Date().toISOString(),content:btoa(unescape(encodeURIComponent(JSON.stringify(data,null,2)))),branch:‘main’};if(sha)body.sha=sha;fetch(GH_API,{method:‘PUT’,headers:ghH(),body:JSON.stringify(body)}).then(function(r){if(cb)cb(r.ok);}).catch(function(){if(cb)cb(false);});}
@@ -514,7 +482,7 @@ window.closeSheet=function(id){gid(id).classList.remove(‘open’);document.bod
 window.toggleFab=function(){fabOpen=!fabOpen;gid(‘fab-menu’).classList.toggle(‘open’,fabOpen);gid(‘fab-main’).style.transform=fabOpen?‘rotate(45deg)’:’’;gid(‘fab-main’).style.background=fabOpen?‘var(–terra)’:’’;};
 window.closeFab=function(){fabOpen=false;gid(‘fab-menu’).classList.remove(‘open’);gid(‘fab-main’).style.transform=’’;gid(‘fab-main’).style.background=’’;};
 
-function renderProfile(){gid(‘p-prenom’).value=S.prenom||’’;gid(‘p-fcode’).value=S.familyId||’’;gid(‘profile-info’).innerHTML=’<div style="display:flex;align-items:center;gap:12px;"><div class="topbar-avatar" style="width:46px;height:46px;">’+((S.prenom||‘A’)[0].toUpperCase())+’</div><div><div style="font-weight:700;">’+(S.prenom||‘Vous’)+’</div><div style="font-size:.7rem;color:var(--ink3);margin-top:2px;">’+(S.familyId||’-’)+’</div></div></div>’;gid(‘token-area’).innerHTML=GH_TOKEN?’<div style="font-size:.72rem;background:var(--sage-l);color:var(--sage);padding:8px 12px;border-radius:10px;font-weight:600;display:flex;align-items:center;justify-content:space-between;">Sync active <button onclick="removeToken()" style="background:none;border:none;color:var(--red);font-size:.72rem;cursor:pointer;font-weight:700;">Supprimer</button></div>’:’<div style="display:flex;gap:8px;"><input class="f-input" id="token-inp" type="password" placeholder="ghp_..." style="flex:1;font-size:14px;"/><button class="btn btn-sage btn-sm" onclick="saveToken()" type="button">Activer</button></div><div style="font-size:.65rem;color:var(--ink3);margin-top:6px;">Token GitHub pour la synchronisation famille.</div>’;}
+function renderProfile(){gid(‘p-prenom’).value=S.prenom||’’;gid(‘p-fcode’).value=S.familyId||’’;gid(‘profile-info’).innerHTML=’<div style="display:flex;align-items:center;gap:12px;"><div class="topbar-avatar" style="width:46px;height:46px;">’+((S.prenom||‘A’)[0].toUpperCase())+’</div><div><div style="font-weight:700;">’+(S.prenom||‘Vous’)+’</div></div></div>’;gid(‘token-area’).innerHTML=GH_TOKEN?’<div style="font-size:.72rem;background:var(--sage-l);color:var(--sage);padding:8px 12px;border-radius:10px;font-weight:600;display:flex;align-items:center;justify-content:space-between;">Sync active <button id="rm-token" style="background:none;border:none;color:var(--red);font-size:.72rem;cursor:pointer;font-weight:700;">Supprimer</button></div>’:’<div style="display:flex;gap:8px;"><input class="f-input" id="token-inp" type="password" placeholder="ghp_..." style="flex:1;font-size:14px;"/><button class="btn btn-sage btn-sm" id="save-token-btn" type="button">Activer</button></div>’;}
 window.saveProfile=function(){S.prenom=gid(‘p-prenom’).value.trim()||S.prenom;save();updateBar();closeSheet(‘sheet-profile’);toast(‘Profil mis a jour’);};
 window.copyCode=function(){var code=S.familyId||’’;if(navigator.clipboard)navigator.clipboard.writeText(code).then(function(){toast(‘Code copie !’);});else{gid(‘p-fcode’).select();document.execCommand(‘copy’);toast(‘Code copie !’);}};
 window.joinFromProfile=function(){var c=gid(‘p-join’).value.trim().toUpperCase();if(!c.startsWith(‘FAM-’)){toast(‘Code invalide’,‘e’);return;}S.familyId=c;save();gid(‘p-fcode’).value=c;gid(‘p-join’).value=’’;pullFam(function(){renderBilan();toast(‘Famille chargee’);});};
@@ -525,18 +493,27 @@ function calcCap(){return S.incomes.reduce(function(a,i){return a+(+i.amount||0)
 function calcDues(){return S.factures.filter(function(f){return !f.paid;}).reduce(function(a,f){return a+(+f.montant||0);},0);}
 function calcFixed(){var m={monthly:1,bimonthly:.5,quarterly:1/3,yearly:1/12};return S.charges.reduce(function(a,c){return a+(+c.montant||0)*(m[c.freq]||1);},0);}
 
+function mkEl(tag,attrs,children){var el=document.createElement(tag);Object.keys(attrs||{}).forEach(function(k){if(k===‘className’)el.className=attrs[k];else if(k===‘style’)el.style.cssText=attrs[k];else if(k===‘innerHTML’)el.innerHTML=attrs[k];else if(k===‘textContent’)el.textContent=attrs[k];else el.setAttribute(k,attrs[k]);});(children||[]).forEach(function(c){if(c)el.appendChild(typeof c===‘string’?document.createTextNode(c):c);});return el;}
+function incomeEl(i){var el=mkEl(‘div’,{className:‘income-item’});el.innerHTML=’<div class="income-icon">’+i.source.split(’ ‘)[0]+’</div><div class="income-body"><div class="income-name">’+i.source.replace(/^\S+\s/,’’)+’</div><div class="income-date">’+fmtD(i.date)+(i.note?’ - ‘+i.note:’’)+’</div></div><div class="income-amount">+’+fmt(i.amount)+’</div>’;el.addEventListener(‘click’,function(){openAddIncome(i.id);});return el;}
+function fEl(f){var bg={1:‘var(–red-l)’,2:‘var(–terra-l)’,3:‘var(–gold-l)’,4:‘var(–ivory3)’};var el=mkEl(‘div’,{className:‘f-item p’+f.prio+(f.paid?’ paid’:’’)});el.innerHTML=’<div class="f-icon" style="background:'+(bg[f.prio]||'var(--ivory2)')+'">’+f.nom.slice(0,2)+’</div><div class="f-body"><div class="f-name">’+f.nom+’</div><div class="f-meta">’+pBadge(f)+’<span>’+fmtD(f.echeance)+’</span>’+(f.scope===‘family’?’<span>Fam</span>’:’’)+’</div></div><div class="f-amount">’+fmt(f.montant)+’</div>’;el.addEventListener(‘click’,function(){openFacDetail(f.id);});return el;}
+function bocalMiniEl(b){var p=Math.min(100,b.actuel/b.objectif*100);var el=mkEl(‘div’,{className:‘bocal-card’});el.innerHTML=’<div style="display:flex;gap:12px;align-items:center;"><div style="font-size:1.7rem;">’+b.nom.split(’ ‘)[0]+’</div><div style="flex:1;"><div class="bocal-name">’+b.nom.replace(/^\S+\s/,’’)+’</div><div class="bocal-progress"><div class="bocal-fill" style="width:'+p+'%;background:var(--sage);"></div></div><div class="bocal-amounts"><span style="color:var(--sage);">’+fmt(b.actuel)+’</span><span>’+fmt(b.objectif)+’</span></div></div><div class="bocal-pct">’+p.toFixed(0)+’%</div></div>’;el.addEventListener(‘click’,function(){openBocalDetail(b.id);});return el;}
+
 function renderBilan(){
 var cap=calcCap(),dues=calcDues(),fixed=calcFixed(),reste=cap-dues;
 var uf=S.factures.filter(function(f){return !f.paid&&f.prio<=2;}).sort(function(a,b){return a.prio-b.prio;}).slice(0,3);
 var li=S.incomes.slice(-3).reverse();
 var ba=S.bocaux.filter(function(b){return b.actuel<b.objectif;}).slice(0,2);
-var h=’<div class="capital-card"><div class="capital-tag">Capital disponible</div><div class="capital-amount'+(cap<0?' neg':'')+'">’+ fmt(cap)+’</div><div class="capital-sub">Solde estime</div><div class="capital-pills"><div class="cpill r">’+fmt(dues)+’ a payer</div><div class="cpill '+(reste>=0?'g':'r')+'">’+fmt(reste)+’ apres factures</div></div></div>’;
-h+=’<div class="metric-row"><div class="metric"><div class="metric-val" style="color:var(--sage)">’+fmt(S.incomes.reduce(function(a,i){return a+(+i.amount||0);},0))+’</div><div class="metric-lbl">Total entre</div><div class="metric-dot" style="background:var(--sage)"></div></div><div class="metric"><div class="metric-val" style="color:var(--terra)">’+fmt(fixed)+’</div><div class="metric-lbl">Charges/mois</div><div class="metric-dot" style="background:var(--terra)"></div></div></div>’;
-if(uf.length){h+=’<div class="sec-hd"><div class="sec-title">A traiter maintenant</div><button class="sec-link" onclick="switchTab('paiement',document.getElementById('nav-paiement'))" type="button">Page paiement</button></div>’;h+=uf.map(fHTML).join(’’);}
-if(li.length){h+=’<div class="sec-hd"><div class="sec-title">Dernieres entrees</div></div>’;h+=li.map(function(i){return ‘<div class="income-item" onclick="openAddIncome(''+i.id+'')"><div class="income-icon">’+i.source.split(’ ‘)[0]+’</div><div class="income-body"><div class="income-name">’+i.source.replace(/^\S+\s/,’’)+’</div><div class="income-date">’+fmtD(i.date)+(i.note?’ - ‘+i.note:’’)+’</div></div><div class="income-amount">+’+fmt(i.amount)+’</div></div>’;}).join(’’);}
-if(ba.length){h+=’<div class="sec-hd"><div class="sec-title">Epargne en cours</div><button class="sec-link" onclick="switchTab('epargne',document.getElementById('nav-epargne'))" type="button">Tout voir</button></div>’;h+=ba.map(function(b){var p=Math.min(100,b.actuel/b.objectif*100);return ‘<div class="bocal-card" onclick="openBocalDetail(''+b.id+'')"><div style="display:flex;gap:12px;align-items:center;"><div style="font-size:1.7rem;">’+b.nom.split(’ ‘)[0]+’</div><div style="flex:1;"><div class="bocal-name">’+b.nom.replace(/^\S+\s/,’’)+’</div><div class="bocal-progress"><div class="bocal-fill" style="width:'+p+'%;background:var(--sage);"></div></div><div class="bocal-amounts"><span style="color:var(--sage);">’+fmt(b.actuel)+’</span><span>’+fmt(b.objectif)+’</span></div></div><div class="bocal-pct">’+p.toFixed(0)+’%</div></div></div>’;}).join(’’);}
-if(!uf.length&&!li.length)h=’<div class="empty-state"><div class="empty-emoji">🌿</div><div class="empty-msg">Tout est calme.<br>Appuyez sur + pour commencer.</div></div>’;
-gid(‘bilan-content’).innerHTML=h;
+var cont=gid(‘bilan-content’);cont.innerHTML=’’;
+var cc=mkEl(‘div’,{className:‘capital-card’});
+cc.innerHTML=’<div class="capital-tag">Capital disponible</div><div class="capital-amount'+(cap<0?' neg':'')+'">’+fmt(cap)+’</div><div class="capital-sub">Solde estime</div><div class="capital-pills"><div class="cpill r">’+fmt(dues)+’ a payer</div><div class="cpill '+(reste>=0?'g':'r')+'">’+fmt(reste)+’ apres factures</div></div>’;
+cont.appendChild(cc);
+var mr=mkEl(‘div’,{className:‘metric-row’});
+mr.innerHTML=’<div class="metric"><div class="metric-val" style="color:var(--sage)">’+fmt(S.incomes.reduce(function(a,i){return a+(+i.amount||0);},0))+’</div><div class="metric-lbl">Total entre</div></div><div class="metric"><div class="metric-val" style="color:var(--terra)">’+fmt(fixed)+’</div><div class="metric-lbl">Charges/mois</div></div>’;
+cont.appendChild(mr);
+if(uf.length){var hd=mkEl(‘div’,{className:‘sec-hd’});var t=mkEl(‘div’,{className:‘sec-title’,textContent:‘A traiter maintenant’});var bt=mkEl(‘button’,{className:‘sec-link’,textContent:‘Page paiement’,type:‘button’});bt.addEventListener(‘click’,function(){switchTab(‘paiement’,gid(‘nav-paiement’));});hd.appendChild(t);hd.appendChild(bt);cont.appendChild(hd);uf.forEach(function(f){cont.appendChild(fEl(f));});}
+if(li.length){cont.appendChild(mkEl(‘div’,{className:‘sec-hd’,innerHTML:’<div class="sec-title">Dernieres entrees</div>’}));li.forEach(function(i){cont.appendChild(incomeEl(i));});}
+if(ba.length){var hd2=mkEl(‘div’,{className:‘sec-hd’});var t2=mkEl(‘div’,{className:‘sec-title’,textContent:‘Epargne en cours’});var bt2=mkEl(‘button’,{className:‘sec-link’,textContent:‘Tout voir’,type:‘button’});bt2.addEventListener(‘click’,function(){switchTab(‘epargne’,gid(‘nav-epargne’));});hd2.appendChild(t2);hd2.appendChild(bt2);cont.appendChild(hd2);ba.forEach(function(b){cont.appendChild(bocalMiniEl(b));});}
+if(!uf.length&&!li.length){cont.innerHTML=’<div class="empty-state"><div class="empty-emoji">🌿</div><div class="empty-msg">Tout est calme.<br>Appuyez sur + pour commencer.</div></div>’;}
 }
 
 function renderPaiement(){
@@ -550,40 +527,35 @@ var s4=unpaid.filter(function(f){return f.prio===3&&dd(f)>=0;}).sort(function(a,
 var s5=S.bocaux.filter(function(b){return b.actuel<b.objectif;});
 var s6=unpaid.filter(function(f){return f.prio===4;}).sort(function(a,b){return dd(a)-dd(b);});
 var total=s1.reduce(function(a,f){return a+(+f.montant||0);},0)+s3.reduce(function(a,f){return a+(+f.montant||0);},0)+s4.reduce(function(a,f){return a+(+f.montant||0);},0);
-var h=’<div class="pay-total"><div class="pay-total-label">Total factures a payer</div><div class="pay-total-amount">’+fmt(total)+’</div><div class="pay-total-sub">Par ordre de priorite</div></div>’;
-function pi(nom,montant,sub,action,color){return ‘<div class="pay-item" onclick="'+action+'"><div class="pay-item-left"><div class="pay-item-name">’+nom+’</div><div class="pay-item-sub">’+sub+’</div></div><div class="pay-item-amount" style="color:'+color+';">’+fmt(montant)+’</div></div>’;}
-var mf={monthly:1,bimonthly:.5,quarterly:1/3,yearly:1/12};
-var fl={monthly:‘Mensuelle’,bimonthly:‘Bimestrielle’,quarterly:‘Trimestrielle’,yearly:‘Annuelle’};
-if(s1.length){h+=’<div class="pay-shd s1">1 - Urgentes / en retard</div>’;h+=s1.map(function(f){return pi(f.nom,f.montant,fmtD(f.echeance)+(f.ref?’ - Ref: ‘+f.ref:’’),‘openFacDetail(’’+f.id+’’)’,‘var(–red)’);}).join(’’);}
-if(s2.length){h+=’<div class="pay-shd s2">2 - Charges fixes</div>’;h+=s2.map(function(c){return pi(c.nom,c.montant*(mf[c.freq]||1),(fl[c.freq]||’’),‘openAddCharge(’’+c.id+’’)’,‘var(–terra)’);}).join(’’);}
-if(s3.length){h+=’<div class="pay-shd s2">3 - Rappels</div>’;h+=s3.map(function(f){return pi(f.nom,f.montant,‘Echeance: ‘+fmtD(f.echeance),‘openFacDetail(’’+f.id+’’)’,‘var(–terra)’);}).join(’’);}
-if(s4.length){h+=’<div class="pay-shd s3">4 - En cours</div>’;h+=s4.map(function(f){return pi(f.nom,f.montant,‘Echeance: ‘+fmtD(f.echeance),‘openFacDetail(’’+f.id+’’)’,‘var(–gold)’);}).join(’’);}
-if(s5.length){var libre=Math.max(0,calcCap()-calcDues());var td=s5.reduce(function(a,b){return a+b.desir;},0);h+=’<div class="pay-shd s4">5 - Epargne suggeree</div>’;h+=s5.map(function(b){var sh=td>0?(b.desir/td)*(libre*.1):0;return pi(b.nom.replace(/^\S+\s/,’’),sh,b.nom.split(’ ‘)[0]+’ - ‘+Math.min(100,b.actuel/b.objectif*100).toFixed(0)+’%’,‘openBocalDetail(’’+b.id+’’)’,‘var(–sage)’);}).join(’’);}
-if(s6.length){h+=’<div class="pay-shd s5">6 - En avance</div>’;h+=s6.map(function(f){return pi(f.nom,f.montant,‘Echeance: ‘+fmtD(f.echeance),‘openFacDetail(’’+f.id+’’)’,‘var(–ink3)’);}).join(’’);}
-if(!s1.length&&!s2.length&&!s3.length&&!s4.length&&!s5.length&&!s6.length)h=’<div class="empty-state"><div class="empty-emoji">🎉</div><div class="empty-msg">Rien a payer !</div></div>’;
-gid(‘paiement-content’).innerHTML=h;
+var cont=gid(‘paiement-content’);cont.innerHTML=’’;
+var pt=mkEl(‘div’,{className:‘pay-total’});pt.innerHTML=’<div class="pay-total-label">Total factures a payer</div><div class="pay-total-amount">’+fmt(total)+’</div><div class="pay-total-sub">Par ordre de priorite</div>’;cont.appendChild(pt);
+function piEl(nom,montant,sub,clickFn,color){var el=mkEl(‘div’,{className:‘pay-item’});el.innerHTML=’<div class="pay-item-left"><div class="pay-item-name">’+nom+’</div><div class="pay-item-sub">’+sub+’</div></div><div class="pay-item-amount" style="color:'+color+';">’+fmt(montant)+’</div>’;el.addEventListener(‘click’,clickFn);return el;}
+var mf={monthly:1,bimonthly:.5,quarterly:1/3,yearly:1/12};var fl={monthly:‘Mensuelle’,bimonthly:‘Bimestrielle’,quarterly:‘Trimestrielle’,yearly:‘Annuelle’};
+if(s1.length){cont.appendChild(mkEl(‘div’,{className:‘pay-shd s1’,textContent:‘1 - Urgentes / en retard’}));s1.forEach(function(f){cont.appendChild(piEl(f.nom,f.montant,fmtD(f.echeance)+(f.ref?’ - Ref: ‘+f.ref:’’),function(){openFacDetail(f.id);},‘var(–red)’));});}
+if(s2.length){cont.appendChild(mkEl(‘div’,{className:‘pay-shd s2’,textContent:‘2 - Charges fixes’}));s2.forEach(function(c){cont.appendChild(piEl(c.nom,c.montant*(mf[c.freq]||1),(fl[c.freq]||’’),function(){openAddCharge(c.id);},‘var(–terra)’));});}
+if(s3.length){cont.appendChild(mkEl(‘div’,{className:‘pay-shd s2’,textContent:‘3 - Rappels’}));s3.forEach(function(f){cont.appendChild(piEl(f.nom,f.montant,‘Echeance: ‘+fmtD(f.echeance),function(){openFacDetail(f.id);},‘var(–terra)’));});}
+if(s4.length){cont.appendChild(mkEl(‘div’,{className:‘pay-shd s3’,textContent:‘4 - En cours’}));s4.forEach(function(f){cont.appendChild(piEl(f.nom,f.montant,‘Echeance: ‘+fmtD(f.echeance),function(){openFacDetail(f.id);},‘var(–gold)’));});}
+if(s5.length){var libre=Math.max(0,calcCap()-calcDues()),td=s5.reduce(function(a,b){return a+b.desir;},0);cont.appendChild(mkEl(‘div’,{className:‘pay-shd s4’,textContent:‘5 - Epargne suggeree’}));s5.forEach(function(b){var sh=td>0?(b.desir/td)*(libre*.1):0;cont.appendChild(piEl(b.nom.replace(/^\S+\s/,’’),sh,b.nom.split(’ ‘)[0]+’ - ‘+Math.min(100,b.actuel/b.objectif*100).toFixed(0)+’%’,function(){openBocalDetail(b.id);},‘var(–sage)’));});}
+if(s6.length){cont.appendChild(mkEl(‘div’,{className:‘pay-shd s5’,textContent:‘6 - En avance’}));s6.forEach(function(f){cont.appendChild(piEl(f.nom,f.montant,‘Echeance: ‘+fmtD(f.echeance),function(){openFacDetail(f.id);},‘var(–ink3)’));});}
+if(cont.children.length<=1){cont.innerHTML=’<div class="empty-state"><div class="empty-emoji">🎉</div><div class="empty-msg">Rien a payer !</div></div>’;}
 }
 
 function gSt(f){if(f.paid)return ‘paid’;var d=Math.ceil((new Date(f.echeance||‘2099-01-01’)-new Date())/86400000);return d<0?‘overdue’:d<=3?‘soon’:‘ok’;}
 function pBadge(f){if(f.paid)return ‘<span class="f-badge fb-sage">Payee</span>’;var s=gSt(f);if(s===‘overdue’)return ‘<span class="f-badge fb-red">En retard</span>’;if(s===‘soon’)return ‘<span class="f-badge fb-terra">Bientot</span>’;return{1:’<span class="f-badge fb-red">Urgent</span>’,2:’<span class="f-badge fb-terra">Rappel</span>’,3:’<span class="f-badge fb-gold">En cours</span>’,4:’<span class="f-badge fb-grey">Plus tard</span>’}[f.prio]||’’;}
-function fHTML(f){var icons=[‘H’,‘C’,‘P’,‘E’,‘S’,‘V’,‘M’,‘D’];var ic=icons[(f.id||‘x’).charCodeAt((f.id||‘x’).length-1)%8];var bg={1:‘var(–red-l)’,2:‘var(–terra-l)’,3:‘var(–gold-l)’,4:‘var(–ivory3)’};return ‘<div class="f-item p'+f.prio+' '+(f.paid?'paid':'')+'" onclick="openFacDetail(''+f.id+'')"><div class="f-icon" style="background:'+(bg[f.prio]||'var(--ivory2)');}';">’+ic+’</div><div class="f-body"><div class="f-name">’+f.nom+’</div><div class="f-meta">’+pBadge(f)+’<span>’+fmtD(f.echeance)+’</span>’+(f.scope===‘family’?’<span>Fam</span>’:’’)+’</div></div><div class="f-amount">’+fmt(f.montant)+’</div></div>’;}
 
 window.setFF=function(btn,filter){facFilter=filter;document.querySelectorAll(’.pill-tab’).forEach(function(b){b.classList.remove(‘active’);});btn.classList.add(‘active’);renderFactures();};
-function renderFactures(){var list=S.factures.slice().sort(function(a,b){if(a.paid!==b.paid)return a.paid?1:-1;if(a.prio!==b.prio)return a.prio-b.prio;return(a.echeance||‘9999’).localeCompare(b.echeance||‘9999’);});if(facFilter===‘urgent’)list=list.filter(function(f){return !f.paid&&(f.prio<=2||gSt(f)===‘overdue’||gSt(f)===‘soon’);});else if(facFilter===‘p1’)list=list.filter(function(f){return f.prio===1&&!f.paid;});else if(facFilter===‘p2’)list=list.filter(function(f){return f.prio===2&&!f.paid;});else if(facFilter===‘p3’)list=list.filter(function(f){return f.prio===3&&!f.paid;});else if(facFilter===‘paid’)list=list.filter(function(f){return f.paid;});if(!list.length){gid(‘factures-list’).innerHTML=’<div class="empty-state"><div class="empty-emoji">🎉</div><div class="empty-msg">Aucune facture ici.</div></div>’;return;}gid(‘factures-list’).innerHTML=list.map(fHTML).join(’’);}
+function renderFactures(){var list=S.factures.slice().sort(function(a,b){if(a.paid!==b.paid)return a.paid?1:-1;if(a.prio!==b.prio)return a.prio-b.prio;return(a.echeance||‘9999’).localeCompare(b.echeance||‘9999’);});if(facFilter===‘urgent’)list=list.filter(function(f){return !f.paid&&(f.prio<=2||gSt(f)===‘overdue’||gSt(f)===‘soon’);});else if(facFilter===‘p1’)list=list.filter(function(f){return f.prio===1&&!f.paid;});else if(facFilter===‘p2’)list=list.filter(function(f){return f.prio===2&&!f.paid;});else if(facFilter===‘p3’)list=list.filter(function(f){return f.prio===3&&!f.paid;});else if(facFilter===‘paid’)list=list.filter(function(f){return f.paid;});var cont=gid(‘factures-list’);if(!list.length){cont.innerHTML=’<div class="empty-state"><div class="empty-emoji">🎉</div><div class="empty-msg">Aucune facture ici.</div></div>’;return;}cont.innerHTML=’’;list.forEach(function(f){cont.appendChild(fEl(f));});}
 
-window.openFacDetail=function(id){var f=S.factures.find(function(x){return x.id===id;});if(!f)return;curFacId=id;gid(‘df-title’).textContent=f.nom;var h=’’;if(f.photo)h+=’<img src="'+f.photo+'" class="fac-photo" alt=""/>’;h+=’<div class="metric-row"><div class="metric"><div class="metric-val">’+fmt(f.montant)+’</div><div class="metric-lbl">Montant</div></div><div class="metric"><div class="metric-val" style="font-size:1.1rem;">’+fmtD(f.echeance)+’</div><div class="metric-lbl">Echeance</div></div></div>’;h+=’<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;">’+pBadge(f);if(f.ref)h+=’<span class="f-badge fb-grey">Ref: ‘+f.ref+’</span>’;if(f.iban)h+=’<span class="f-badge fb-grey">’+f.iban+’</span>’;h+=’<span class="f-badge '+(f.scope==='family'?'fb-sage':'fb-grey')+'">’+(f.scope===‘family’?‘Famille’:‘Personnel’)+’</span></div>’;if(f.photo)h+=’<button class="dl-btn" onclick="downloadFac(''+id+'')" type="button">Telecharger / Partager</button>’;h+=’<div style="display:flex;flex-direction:column;gap:8px;">’;if(!f.paid)h+=’<button class="btn btn-sage" onclick="markPaid(''+id+'',event)" type="button">Marquer comme payee</button>’;else h+=’<button class="btn btn-outline" onclick="markUnpaid(''+id+'')" type="button">Annuler le paiement</button>’;h+=’</div>’;gid(‘df-body’).innerHTML=h;openSheet(‘sheet-df’);};
-window.editFac=function(){closeSheet(‘sheet-df’);setTimeout(function(){openAddFac(curFacId);},320);};
+window.openFacDetail=function(id){var f=S.factures.find(function(x){return x.id===id;});if(!f)return;curFacId=id;gid(‘df-title’).textContent=f.nom;var h=’’;if(f.photo)h+=’<img src="'+f.photo+'" class="fac-photo" alt=""/>’;h+=’<div class="metric-row"><div class="metric"><div class="metric-val">’+fmt(f.montant)+’</div><div class="metric-lbl">Montant</div></div><div class="metric"><div class="metric-val" style="font-size:1.1rem;">’+fmtD(f.echeance)+’</div><div class="metric-lbl">Echeance</div></div></div>’;h+=’<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;">’+pBadge(f);if(f.ref)h+=’<span class="f-badge fb-grey">Ref: ‘+f.ref+’</span>’;if(f.iban)h+=’<span class="f-badge fb-grey">’+f.iban+’</span>’;h+=’<span class="f-badge '+(f.scope==='family'?'fb-sage':'fb-grey')+'">’+(f.scope===‘family’?‘Famille’:‘Personnel’)+’</span></div>’;if(f.photo)h+=’<button class="dl-btn" id="dl-fac-btn" type="button">Telecharger / Partager</button>’;h+=’<div style="display:flex;flex-direction:column;gap:8px;" id="fac-actions"></div>’;gid(‘df-body’).innerHTML=h;if(f.photo){gid(‘dl-fac-btn’).addEventListener(‘click’,function(){downloadFac(id);});}var actions=gid(‘fac-actions’);if(!f.paid){var pb=mkEl(‘button’,{className:‘btn btn-sage’,type:‘button’,textContent:‘Marquer comme payee’});pb.addEventListener(‘click’,function(e){markPaid(id,e);});actions.appendChild(pb);}else{var ub=mkEl(‘button’,{className:‘btn btn-outline’,type:‘button’,textContent:‘Annuler le paiement’});ub.addEventListener(‘click’,function(){markUnpaid(id);});actions.appendChild(ub);}var eb=mkEl(‘button’,{className:‘btn btn-outline’,type:‘button’,textContent:‘Modifier’});eb.addEventListener(‘click’,function(){closeSheet(‘sheet-df’);setTimeout(function(){openAddFac(curFacId);},320);});actions.appendChild(eb);openSheet(‘sheet-df’);};
 window.markPaid=function(id,e){var f=S.factures.find(function(x){return x.id===id;});if(!f)return;f.paid=true;f.paidDate=today();save();schedSync();closeSheet(‘sheet-df’);if(e)confetti(e.clientX,e.clientY);toast(‘Payee ! Bien joue !’);renderBilan();renderFactures();renderPaiement();};
 window.markUnpaid=function(id){var f=S.factures.find(function(x){return x.id===id;});if(!f)return;f.paid=false;f.paidDate=null;save();schedSync();closeSheet(‘sheet-df’);toast(‘Paiement annule’);renderBilan();renderFactures();};
-window.downloadFac=function(id){var f=S.factures.find(function(x){return x.id===id;});if(!f)return;var cv=gid(‘dl-cv’);cv.width=800;cv.height=460;var ctx=cv.getContext(‘2d’);ctx.fillStyle=’#FAFAF7’;ctx.fillRect(0,0,800,460);ctx.fillStyle=’#1C1B18’;ctx.fillRect(0,0,800,100);ctx.fillStyle=’#fff’;ctx.font=‘bold 30px sans-serif’;ctx.fillText(‘Aurora Budget’,36,46);ctx.fillStyle=‘rgba(255,255,255,.5)’;ctx.font=‘15px sans-serif’;ctx.fillText(‘Facture’,36,76);ctx.fillStyle=’#1C1B18’;ctx.font=‘bold 24px sans-serif’;ctx.fillText(f.nom,36,148);ctx.fillStyle=’#8C8A82’;ctx.font=‘15px sans-serif’;ctx.fillText(‘Montant’,36,188);ctx.fillStyle=’#C4622D’;ctx.font=‘bold 34px sans-serif’;ctx.fillText(fmt(f.montant),36,228);ctx.fillStyle=’#8C8A82’;ctx.font=‘15px sans-serif’;ctx.fillText(‘Echeance’,400,188);ctx.fillStyle=’#1C1B18’;ctx.font=‘bold 24px sans-serif’;ctx.fillText(fmtD(f.echeance),400,228);if(f.ref){ctx.fillStyle=’#8C8A82’;ctx.font=‘14px sans-serif’;ctx.fillText(‘Ref: ‘+f.ref,36,272);}if(f.iban){ctx.fillStyle=’#8C8A82’;ctx.font=‘14px sans-serif’;ctx.fillText(‘IBAN: ‘+f.iban,36,296);}ctx.fillStyle=’#EAE9E2’;ctx.fillRect(36,320,728,2);ctx.fillStyle=’#8C8A82’;ctx.font=‘13px sans-serif’;ctx.fillText(‘Aurora - ‘+new Date().toLocaleDateString(‘fr-CH’),36,350);function dl(url){if(navigator.share){fetch(url).then(function(r){return r.blob();}).then(function(blob){var file=new File([blob],f.nom.replace(/\s+/g,’*’)+’.png’,{type:‘image/png’});navigator.share({title:f.nom,files:[file]}).catch(function(){});});}else{var a=document.createElement(‘a’);a.href=url;a.download=f.nom.replace(/\s+/g,’*’)+’.png’;a.click();}}if(f.photo){var img=new Image();img.onload=function(){var th=100,tw=th*(img.width/img.height);ctx.drawImage(img,800-tw-36,120,tw,th);dl(cv.toDataURL(‘image/png’));};img.src=f.photo;}else{dl(cv.toDataURL(‘image/png’));}};
+window.downloadFac=function(id){var f=S.factures.find(function(x){return x.id===id;});if(!f)return;var cv=gid(‘dl-cv’);cv.width=800;cv.height=460;var ctx=cv.getContext(‘2d’);ctx.fillStyle=’#FAFAF7’;ctx.fillRect(0,0,800,460);ctx.fillStyle=’#1C1B18’;ctx.fillRect(0,0,800,100);ctx.fillStyle=’#fff’;ctx.font=‘bold 30px sans-serif’;ctx.fillText(‘Aurora Budget’,36,46);ctx.fillStyle=’#1C1B18’;ctx.font=‘bold 24px sans-serif’;ctx.fillText(f.nom,36,148);ctx.fillStyle=’#C4622D’;ctx.font=‘bold 34px sans-serif’;ctx.fillText(fmt(f.montant),36,228);ctx.fillStyle=’#1C1B18’;ctx.font=‘bold 24px sans-serif’;ctx.fillText(fmtD(f.echeance),400,228);function dl(url){if(navigator.share){fetch(url).then(function(r){return r.blob();}).then(function(blob){var file=new File([blob],f.nom.replace(/\s+/g,’*’)+’.png’,{type:‘image/png’});navigator.share({title:f.nom,files:[file]}).catch(function(){});});}else{var a=document.createElement(‘a’);a.href=url;a.download=f.nom.replace(/\s+/g,’*’)+’.png’;a.click();}}if(f.photo){var img=new Image();img.onload=function(){ctx.drawImage(img,650,120,100,100);dl(cv.toDataURL(‘image/png’));};img.src=f.photo;}else{dl(cv.toDataURL(‘image/png’));}};
 
-function renderCharges(){var total=calcFixed();gid(‘charges-summary’).innerHTML=’<div class="metric"><div class="metric-val" style="color:var(--terra)">’+fmt(total)+’</div><div class="metric-lbl">Total mensuel</div></div><div class="metric"><div class="metric-val">’+S.charges.length+’</div><div class="metric-lbl">Charges actives</div></div>’;if(!S.charges.length){gid(‘charges-list’).innerHTML=’<div class="empty-state"><div class="empty-emoji">🔁</div><div class="empty-msg">Ajoutez vos charges fixes.</div></div>’;return;}var fl={monthly:‘Mensuelle’,bimonthly:‘Bimestrielle’,quarterly:‘Trimestrielle’,yearly:‘Annuelle’};gid(‘charges-list’).innerHTML=S.charges.map(function(c){return ‘<div class="charge-item" onclick="openAddCharge(''+c.id+'')"><div class="charge-icon">’+c.cat.split(’ ‘)[0]+’</div><div class="charge-body"><div class="charge-name">’+c.nom+’</div><div class="charge-freq">’+(fl[c.freq]||’’)+’ - ‘+(c.scope===‘family’?‘Famille’:‘Personnel’)+’</div></div><div class="charge-amount">’+fmt(c.montant)+’</div></div>’;}).join(’’);}
+function renderCharges(){var total=calcFixed();gid(‘charges-summary’).innerHTML=’<div class="metric"><div class="metric-val" style="color:var(--terra)">’+fmt(total)+’</div><div class="metric-lbl">Total mensuel</div></div><div class="metric"><div class="metric-val">’+S.charges.length+’</div><div class="metric-lbl">Charges actives</div></div>’;var cont=gid(‘charges-list’);if(!S.charges.length){cont.innerHTML=’<div class="empty-state"><div class="empty-emoji">🔁</div><div class="empty-msg">Ajoutez vos charges fixes.</div></div>’;return;}var fl={monthly:‘Mensuelle’,bimonthly:‘Bimestrielle’,quarterly:‘Trimestrielle’,yearly:‘Annuelle’};cont.innerHTML=’’;S.charges.forEach(function(c){var el=mkEl(‘div’,{className:‘charge-item’});el.innerHTML=’<div class="charge-icon">’+c.cat.split(’ ‘)[0]+’</div><div class="charge-body"><div class="charge-name">’+c.nom+’</div><div class="charge-freq">’+(fl[c.freq]||’’)+’ - ‘+(c.scope===‘family’?‘Famille’:‘Personnel’)+’</div></div><div class="charge-amount">’+fmt(c.montant)+’</div>’;el.addEventListener(‘click’,function(){openAddCharge(c.id);});cont.appendChild(el);});}
 
-function renderEpargne(){var libre=Math.max(0,calcCap()-calcDues()),td=S.bocaux.reduce(function(a,b){return a+b.desir;},0);var h=’<div class="capital-card" style="background:linear-gradient(135deg,#0e1f10,#152018);"><div class="capital-tag">Suggestion epargne ce mois</div><div class="capital-amount" style="font-size:2.2rem;">’+fmt(libre*.1)+’</div><div class="capital-sub">10% du reste disponible (’+fmt(libre)+’)</div></div>’;if(!S.bocaux.length){h+=’<div class="empty-state"><div class="empty-emoji">🥫</div><div class="empty-msg">Creez votre premier bocal</div></div>’;gid(‘epargne-content’).innerHTML=h;return;}S.bocaux.forEach(function(b){var p=Math.min(100,b.actuel/b.objectif*100);var ml=b.dateObj?Math.max(1,Math.ceil((new Date(b.dateObj)-new Date())/(30*86400000))):null;var sh=td>0?(b.desir/td)*(libre*.1):0;var fc=p>=100?‘var(–sage)’:p>=60?‘var(–gold)’:‘var(–blue)’;h+=’<div class="bocal-card" onclick="openBocalDetail(''+b.id+'')"><div class="bocal-top"><div><div class="bocal-emoji">’+b.nom.split(’ ‘)[0]+’</div><div class="bocal-name">’+b.nom.replace(/^\S+\s/,’’)+’</div><div class="bocal-scope">’+(b.scope===‘family’?‘Famille’:‘Personnel’)+(b.dateObj?’ - ‘+fmtD(b.dateObj):’’)+’</div></div><div class="bocal-pct">’+p.toFixed(0)+’%</div></div><div class="bocal-progress"><div class="bocal-fill" style="width:'+p+'%;background:'+fc+';"></div></div><div class="bocal-amounts"><span>’+fmt(b.actuel)+’</span><span>/ ‘+fmt(b.objectif)+’</span></div>’+(sh>0?’<div class="bocal-conseil">Ce mois : ‘+fmt(sh)+(ml?’ (’+ml+’ mois restants)’:’’)+’</div>’:’’)+’</div>’;});gid(‘epargne-content’).innerHTML=h;}
-window.openBocalDetail=function(id){var b=S.bocaux.find(function(x){return x.id===id;});if(!b)return;curBocId=id;gid(‘db-title’).textContent=b.nom;gid(‘db-body’).innerHTML=’<div class="metric-row"><div class="metric"><div class="metric-val" style="color:var(--sage)">’+fmt(b.actuel)+’</div><div class="metric-lbl">Epargne</div></div><div class="metric"><div class="metric-val">’+fmt(Math.max(0,b.objectif-b.actuel))+’</div><div class="metric-lbl">Manquant</div></div></div><div class="f-group" style="margin-top:12px;"><label class="f-label">Ajouter</label><div style="display:flex;gap:8px;"><input class="f-input" type="number" id="ba-amt" placeholder="50" style="flex:1;"/><button class="btn btn-sage btn-sm" onclick="addBoc()" type="button">Ajouter</button></div></div><div class="f-group"><label class="f-label">Retirer</label><div style="display:flex;gap:8px;"><input class="f-input" type="number" id="br-amt" placeholder="50" style="flex:1;"/><button class="btn btn-outline btn-sm" onclick="remBoc()" type="button">Retirer</button></div></div>’;openSheet(‘sheet-db’);};
-window.editBoc=function(){closeSheet(‘sheet-db’);setTimeout(function(){openAddBocal(curBocId);},320);};
-window.addBoc=function(){var b=S.bocaux.find(function(x){return x.id===curBocId;});if(!b)return;var a=parseFloat(gid(‘ba-amt’).value)||0;if(!a)return;b.actuel=Math.min(b.objectif,b.actuel+a);save();schedSync();toast(’+’+fmt(a));closeSheet(‘sheet-db’);renderEpargne();renderBilan();};
-window.remBoc=function(){var b=S.bocaux.find(function(x){return x.id===curBocId;});if(!b)return;var a=parseFloat(gid(‘br-amt’).value)||0;if(!a)return;b.actuel=Math.max(0,b.actuel-a);save();schedSync();toast(fmt(a)+’ retire’);closeSheet(‘sheet-db’);renderEpargne();renderBilan();};
+function renderEpargne(){var libre=Math.max(0,calcCap()-calcDues()),td=S.bocaux.reduce(function(a,b){return a+b.desir;},0);var cont=gid(‘epargne-content’);cont.innerHTML=’<div class="capital-card" style="background:linear-gradient(135deg,#0e1f10,#152018);"><div class="capital-tag">Suggestion epargne ce mois</div><div class="capital-amount" style="font-size:2.2rem;">’+fmt(libre*.1)+’</div><div class="capital-sub">10% du reste disponible (’+fmt(libre)+’)</div></div>’;if(!S.bocaux.length){cont.innerHTML+=’<div class="empty-state"><div class="empty-emoji">🥫</div><div class="empty-msg">Creez votre premier bocal</div></div>’;return;}S.bocaux.forEach(function(b){var p=Math.min(100,b.actuel/b.objectif*100);var ml=b.dateObj?Math.max(1,Math.ceil((new Date(b.dateObj)-new Date())/(30*86400000))):null;var sh=td>0?(b.desir/td)*(libre*.1):0;var fc=p>=100?‘var(–sage)’:p>=60?‘var(–gold)’:‘var(–blue)’;var el=mkEl(‘div’,{className:‘bocal-card’});el.innerHTML=’<div class="bocal-top"><div><div class="bocal-emoji">’+b.nom.split(’ ‘)[0]+’</div><div class="bocal-name">’+b.nom.replace(/^\S+\s/,’’)+’</div><div class="bocal-scope">’+(b.scope===‘family’?‘Famille’:‘Personnel’)+(b.dateObj?’ - ‘+fmtD(b.dateObj):’’)+’</div></div><div class="bocal-pct">’+p.toFixed(0)+’%</div></div><div class="bocal-progress"><div class="bocal-fill" style="width:'+p+'%;background:'+fc+';"></div></div><div class="bocal-amounts"><span>’+fmt(b.actuel)+’</span><span>/ ‘+fmt(b.objectif)+’</span></div>’+(sh>0?’<div class="bocal-conseil">Ce mois : ‘+fmt(sh)+(ml?’ (’+ml+’ mois)’:’’)+’</div>’:’’);el.addEventListener(‘click’,function(){openBocalDetail(b.id);});cont.appendChild(el);});}
+
+window.openBocalDetail=function(id){var b=S.bocaux.find(function(x){return x.id===id;});if(!b)return;curBocId=id;gid(‘db-title’).textContent=b.nom;var cont=gid(‘db-body’);cont.innerHTML=’<div class="metric-row"><div class="metric"><div class="metric-val" style="color:var(--sage)">’+fmt(b.actuel)+’</div><div class="metric-lbl">Epargne</div></div><div class="metric"><div class="metric-val">’+fmt(Math.max(0,b.objectif-b.actuel))+’</div><div class="metric-lbl">Manquant</div></div></div><div class="f-group" style="margin-top:12px;"><label class="f-label">Ajouter</label><div style="display:flex;gap:8px;"><input class="f-input" type="number" id="ba-amt" placeholder="50" style="flex:1;"/><button class="btn btn-sage btn-sm" id="add-boc-btn" type="button">Ajouter</button></div></div><div class="f-group"><label class="f-label">Retirer</label><div style="display:flex;gap:8px;"><input class="f-input" type="number" id="br-amt" placeholder="50" style="flex:1;"/><button class="btn btn-outline btn-sm" id="rem-boc-btn" type="button">Retirer</button></div></div><button class="btn btn-outline" id="edit-boc-btn" type="button" style="margin-top:8px;">Modifier le bocal</button>’;gid(‘add-boc-btn’).addEventListener(‘click’,function(){var a=parseFloat(gid(‘ba-amt’).value)||0;if(!a)return;b.actuel=Math.min(b.objectif,b.actuel+a);save();schedSync();toast(’+’+fmt(a));closeSheet(‘sheet-db’);renderEpargne();renderBilan();});gid(‘rem-boc-btn’).addEventListener(‘click’,function(){var a=parseFloat(gid(‘br-amt’).value)||0;if(!a)return;b.actuel=Math.max(0,b.actuel-a);save();schedSync();toast(fmt(a)+’ retire’);closeSheet(‘sheet-db’);renderEpargne();renderBilan();});gid(‘edit-boc-btn’).addEventListener(‘click’,function(){closeSheet(‘sheet-db’);setTimeout(function(){openAddBocal(curBocId);},320);});openSheet(‘sheet-db’);};
 
 window.setScope=function(p,v){scopes[p]=v;var sp=gid(p+’-sp’),sf=gid(p+’-sf’);if(!sp||!sf)return;sp.className=‘scope-btn’+(v===‘personal’?’ ap’:’’);sf.className=‘scope-btn’+(v===‘family’?’ af’:’’);};
 window.setPrio=function(p){selPrio=p;[1,2,3,4].forEach(function(i){var b=gid(‘prio-’+i);if(b)b.className=‘prio-btn’+(i===p?’ sel-’+p:’’);});};
@@ -610,18 +582,14 @@ window.openAddBocal=function(editId){var b=editId?S.bocaux.find(function(x){retu
 window.saveBocal=function(){var n=gid(‘boc-nom’).value.trim(),o=parseFloat(gid(‘boc-obj’).value)||0;if(!n||!o){toast(‘Remplissez les champs’,‘e’);return;}var eid=gid(‘boc-eid’).value;var d={id:eid||‘b’+uid(),nom:n,objectif:o,actuel:parseFloat(gid(‘boc-actuel’).value)||0,desir:parseInt(gid(‘boc-desir’).value)||5,dateObj:gid(‘boc-date’).value||null,scope:scopes.boc};if(eid){var idx=S.bocaux.findIndex(function(x){return x.id===eid;});if(idx>-1)S.bocaux[idx]=d;}else S.bocaux.push(d);save();schedSync();closeSheet(‘sheet-add-bocal’);toast(eid?‘Bocal modifie’:‘Bocal cree’);[‘boc-nom’,‘boc-obj’,‘boc-actuel’,‘boc-date’].forEach(function(id){var e=gid(id);if(e)e.value=’’;});renderEpargne();renderBilan();};
 window.deleteBocal=function(){var id=gid(‘boc-eid’).value;if(!id)return;if(!confirm(‘Supprimer ?’))return;S.bocaux=S.bocaux.filter(function(x){return x.id!==id;});save();schedSync();closeSheet(‘sheet-add-bocal’);renderEpargne();toast(‘Bocal supprime’,‘e’);};
 
-// INIT - seul endroit qui touche au DOM
 window.onload=function(){
 load();
+gid(‘btn-login’).addEventListener(‘click’,doLogin);
 document.querySelectorAll(’.sheet-overlay’).forEach(function(el){el.addEventListener(‘click’,function(e){if(e.target===el)closeSheet(el.id);});});
-if(S.prenom){
-gid(‘screen-auth’).classList.remove(‘active’);
-gid(‘screen-main’).classList.add(‘active’);
-updateBar();renderBilan();
-if(GH_TOKEN&&S.familyId)pullFam(function(){renderBilan();});
-}
+document.getElementById(‘sheet-profile’).addEventListener(‘click’,function(e){if(e.target.id===‘rm-token’)removeToken();else if(e.target.id===‘save-token-btn’)saveToken();});
+if(S.prenom){gid(‘screen-auth’).classList.remove(‘active’);gid(‘screen-main’).classList.add(‘active’);updateBar();renderBilan();if(GH_TOKEN&&S.familyId)pullFam(function(){renderBilan();});}
 };
-</script>
 
+</script>
 </body>
 </html>
