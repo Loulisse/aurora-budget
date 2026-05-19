@@ -236,7 +236,7 @@ html,body{height:100%;background:var(--ivory);color:var(--ink);font-family:var(-
     <input class="auth-input" id="auth-prenom" type="text" placeholder="Votre prenom..." maxlength="30" autocomplete="given-name"/>
     <div class="auth-divider">code famille (optionnel)</div>
     <input class="auth-input" id="auth-fcode" type="text" placeholder="FAM-XXXXXX" maxlength="14" style="text-transform:uppercase;letter-spacing:.06em;margin-bottom:14px;"/>
-    <button class="auth-submit" type="button" id="btn-login">Acceder a Aurora</button>
+    <button class="auth-submit" type="button" id="btn-login" onclick="doLogin()">Acceder a Aurora</button>
     <div class="auth-note">Sans code famille, vos donnees restent privees sur cet appareil.</div>
   </div>
 </div>
@@ -462,16 +462,23 @@ function schedSync(){clearTimeout(syncTimer);syncTimer=setTimeout(syncFam,1500);
 function setSyncDot(on){var d=gid(‘sync-dot’);if(d)d.className=‘sync-dot’+(on?’ active’:’’);}
 
 window.doLogin=function(){
-var p=gid(‘auth-prenom’).value.trim();
-if(!p){toast(‘Entrez votre prenom’,‘e’);return;}
-var fc=gid(‘auth-fcode’).value.trim().toUpperCase();
+try {
+var prenom_el=document.getElementById(‘auth-prenom’);
+var fcode_el=document.getElementById(‘auth-fcode’);
+if(!prenom_el){alert(‘Erreur: champ prenom introuvable’);return;}
+var p=prenom_el.value.trim();
+if(!p){alert(‘Entrez votre prenom’);return;}
+var fc=fcode_el?fcode_el.value.trim().toUpperCase():’’;
 if(fc&&fc.startsWith(‘FAM-’))S.familyId=fc;
 if(!S.familyId)S.familyId=‘FAM-’+uid();
 S.prenom=p;save();
-gid(‘screen-auth’).classList.remove(‘active’);
-gid(‘screen-main’).classList.add(‘active’);
+document.getElementById(‘screen-auth’).classList.remove(‘active’);
+document.getElementById(‘screen-main’).classList.add(‘active’);
 updateBar();renderBilan();
-if(GH_TOKEN)pullFam(function(){renderBilan();toast(‘Famille synchronisee’);});
+if(GH_TOKEN)pullFam(function(){renderBilan();});
+} catch(err) {
+alert(‘Erreur login: ‘+err.message);
+}
 };
 window.doSignOut=function(){if(!confirm(‘Se deconnecter ?’))return;S.prenom=’’;save();gid(‘screen-main’).classList.remove(‘active’);gid(‘screen-auth’).classList.add(‘active’);};
 function updateBar(){var h=new Date().getHours();gid(‘tb-greeting’).textContent=h<12?‘Bonjour’:‘Bonsoir’;gid(‘tb-name’).textContent=S.prenom||‘Aurora’;gid(‘tb-avatar’).textContent=(S.prenom||‘A’)[0].toUpperCase();}
