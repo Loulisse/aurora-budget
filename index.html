@@ -217,6 +217,23 @@ html,body{height:100%;background:var(--ivory);color:var(--ink);font-family:var(-
 .fac-photo{width:100%;border-radius:14px;margin-bottom:14px;display:block;}
 .dl-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:13px;background:var(--ink);color:#fff;border:none;border-radius:var(--r-sm);font-family:var(--sans);font-weight:700;font-size:.88rem;cursor:pointer;margin-bottom:10px;}
 .edit-btn{display:inline-flex;align-items:center;gap:6px;padding:7px 13px;background:var(--ivory3);color:var(--ink);border:none;border-radius:100px;font-family:var(--sans);font-weight:600;font-size:.78rem;cursor:pointer;}
+.member-card{background:#fff;border-radius:var(--r-lg);padding:18px;margin-bottom:12px;border:1.5px solid var(--border);box-shadow:var(--shadow-sm);}
+.member-header{display:flex;align-items:center;gap:12px;margin-bottom:14px;}
+.member-avatar{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--sage-m),var(--gold-l));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.1rem;flex-shrink:0;}
+.member-name{font-weight:700;font-size:1rem;}
+.member-role{font-size:.68rem;color:var(--ink3);}
+.member-cap{font-family:var(--serif);font-size:1.6rem;letter-spacing:-.02em;}
+.balance-card{background:linear-gradient(135deg,#1a2f1c,#152018);border-radius:var(--r-lg);padding:20px;margin-bottom:16px;}
+.balance-title{font-size:.65rem;font-weight:600;text-transform:uppercase;letter-spacing:.12em;color:rgba(255,255,255,.5);margin-bottom:6px;}
+.balance-amount{font-family:var(--serif);font-size:2rem;color:#fff;letter-spacing:-.02em;}
+.balance-sub{font-size:.72rem;color:rgba(255,255,255,.4);margin-top:4px;}
+.virement-card{border-radius:var(--r);padding:14px 16px;margin-bottom:12px;border:1.5px solid;}
+.virement-card.positif{background:var(--sage-l);border-color:var(--sage-m);color:var(--sage);}
+.virement-card.negatif{background:var(--terra-l);border-color:var(--terra-m);color:var(--terra);}
+.fac-tag{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:100px;font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;}
+.tag-moi{background:var(--blue-l);color:var(--blue);}
+.tag-autre{background:var(--ivory3);color:var(--ink3);}
+.tag-fam{background:var(--sage-l);color:var(--sage);}
 </style>
 </head>
 <body>
@@ -252,6 +269,7 @@ html,body{height:100%;background:var(--ivory);color:var(--ink);font-family:var(-
       <div class="topbar-avatar" id="tb-avatar" onclick="openSheet('sheet-profile')">A</div>
     </div>
   </div>
+  <div class="pages-container">
   <div id="page-bilan" class="page active"><div id="bilan-content"></div></div>
   <div id="page-paiement" class="page"><div id="paiement-content"></div></div>
   <div id="page-factures" class="page">
@@ -269,7 +287,9 @@ html,body{height:100%;background:var(--ivory);color:var(--ink);font-family:var(-
     <div id="charges-summary" class="metric-row"></div>
     <div id="charges-list"></div>
   </div>
+  <div id="page-famille" class="page"><div id="famille-content"></div></div>
   <div id="page-epargne" class="page"><div id="epargne-content"></div></div>
+  </div><!-- /pages-container -->
   <nav class="bottomnav">
     <button class="nav-item active" id="nav-bilan" onclick="switchTab('bilan',this)"><span class="ni-icon">&#127968;</span><span class="ni-label">Bilan</span></button>
     <button class="nav-item" id="nav-paiement" onclick="switchTab('paiement',this)"><span class="ni-icon">&#128179;</span><span class="ni-label">Payer</span></button>
@@ -291,7 +311,8 @@ html,body{height:100%;background:var(--ivory);color:var(--ink);font-family:var(-
     <div class="sheet-header"><div class="sheet-title">Mon profil</div><button class="sheet-close" onclick="closeSheet('sheet-profile')">x</button></div>
     <div class="sheet-body">
       <div id="profile-info" style="margin-bottom:16px;"></div>
-      <div class="f-group"><label class="f-label">Prenom</label><input class="f-input" id="p-prenom" type="text"/></div>
+      <div class="f-group"><label class="f-label">Votre prenom</label><input class="f-input" id="p-prenom" type="text"/></div>
+      <div class="f-group"><label class="f-label">Prenom de votre partenaire</label><input class="f-input" id="p-membre2" type="text" placeholder="Lilo..."/></div>
       <div class="f-group"><label class="f-label">Mon code famille</label>
         <div style="display:flex;gap:8px;"><input class="f-input" id="p-fcode" readonly style="font-family:monospace;letter-spacing:.1em;flex:1;"/>
         <button class="btn btn-outline btn-sm" onclick="copyCode()" type="button">Copier</button></div>
@@ -332,8 +353,11 @@ html,body{height:100%;background:var(--ivory);color:var(--ink);font-family:var(-
     <div class="sheet-header"><div class="sheet-title" id="fac-title">Facture</div><button class="sheet-close" onclick="closeSheet('sheet-add-facture');stopCams()">x</button></div>
     <div class="sheet-body">
       <div class="f-group">
-        <label class="f-label">Photo + Scan QR</label>
-        <button class="btn btn-outline" id="btn-scan" onclick="startCam()" type="button">Ouvrir la camera</button>
+        <label class="f-label">&#128247; Photographier la facture</label>
+        <div style="display:flex;gap:8px;margin-bottom:8px;">
+          <button class="btn btn-outline" id="btn-scan" onclick="startCam()" type="button" style="flex:1;">&#128247; Ouvrir camera</button>
+          <label class="btn btn-outline" style="flex:1;cursor:pointer;justify-content:center;display:flex;align-items:center;gap:6px;">&#128193; Fichier<input type="file" id="file-input" accept="image/*,application/pdf" style="display:none" onchange="handleFile(event)"/></label>
+        </div>
         <div class="cam-wrap" id="cam-qr">
           <video id="vid-qr" playsinline autoplay muted onclick="capturePhoto()"></video>
           <div class="cam-overlay"><div class="cam-frame">
@@ -342,11 +366,10 @@ html,body{height:100%;background:var(--ivory);color:var(--ink);font-family:var(-
             <div class="cam-line"></div>
           </div></div>
         </div>
-        <div style="font-size:.68rem;color:var(--ink3);margin-top:6px;">Appuyez sur la video pour capturer</div>
-        <div class="qr-ok" id="qr-ok">QR lu - informations remplies</div>
+        <div style="font-size:.68rem;color:var(--ink3);margin-top:5px;">Pointez vers le QR code &#8594; appuyez pour capturer. Les infos se remplissent automatiquement.</div>
+        <div class="qr-ok" id="qr-ok">&#10003; QR lu - informations remplies automatiquement</div>
         <img id="photo-thumb" class="photo-thumb" alt=""/>
         <canvas id="photo-canvas" style="display:none;"></canvas>
-        <div style="margin-top:8px;"><label class="btn btn-outline btn-sm" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;width:auto;">Importer<input type="file" id="file-input" accept="image/*,application/pdf" style="display:none" onchange="handleFile(event)"/></label></div>
       </div>
       <div class="f-group"><label class="f-label">Emetteur *</label><input class="f-input" type="text" id="fac-nom" placeholder="Swisscom, Loyer..."/></div>
       <div class="f-group"><label class="f-label">Montant (CHF) *</label><input class="f-input" type="number" id="fac-montant" placeholder="0.00" inputmode="decimal" step="0.01"/></div>
@@ -362,6 +385,15 @@ html,body{height:100%;background:var(--ivory);color:var(--ink);font-family:var(-
         </div></div>
       <div class="f-group"><label class="f-label">Visibilite</label>
         <div class="scope-toggle"><button class="scope-btn ap" id="fac-sp" onclick="setScope('fac','personal')" type="button">Personnel</button><button class="scope-btn" id="fac-sf" onclick="setScope('fac','family')" type="button">Famille</button></div></div>
+      <div class="f-group" id="fac-payeur-group" style="display:none;">
+        <label class="f-label">Qui paie cette facture ?</label>
+        <div class="scope-toggle" id="fac-payeur-toggle"></div>
+        <div style="margin-top:8px;">
+          <label class="f-label" style="margin-bottom:4px;">Ma part (%)</label>
+          <input class="f-input" type="number" id="fac-part" placeholder="50" min="0" max="100" value="50" style="width:100px;display:inline-block;"/>
+          <span style="font-size:.75rem;color:var(--ink3);margin-left:8px;" id="fac-part-other">Autre part: 50%</span>
+        </div>
+      </div>
       <input type="hidden" id="fac-eid"/>
       <div class="btn-row">
         <button class="btn btn-ink" onclick="saveFacture()" style="flex:1;" type="button">Enregistrer</button>
@@ -383,6 +415,8 @@ html,body{height:100%;background:var(--ivory);color:var(--ink);font-family:var(-
         <select class="f-select" id="ch-cat"><option>Loyer / Charges</option><option>Credit / Leasing</option><option>Assurance</option><option>Telecom</option><option>Energie</option><option>Loisirs</option><option>Transport</option><option>Sante</option><option>Autre</option></select></div>
       <div class="f-group"><label class="f-label">Visibilite</label>
         <div class="scope-toggle"><button class="scope-btn ap" id="ch-sp" onclick="setScope('ch','personal')" type="button">Personnel</button><button class="scope-btn" id="ch-sf" onclick="setScope('ch','family')" type="button">Famille</button></div></div>
+      <div class="f-group"><label class="f-label">Payeur (si famille)</label>
+        <input class="f-input" id="ch-payeur" type="text" placeholder="Prenom du payeur..."/></div>
       <input type="hidden" id="ch-eid"/>
       <div class="btn-row">
         <button class="btn btn-ink" onclick="saveCharge()" style="flex:1;" type="button">Enregistrer</button>
@@ -434,7 +468,7 @@ html,body{height:100%;background:var(--ivory);color:var(--ink);font-family:var(-
 var GH_OWNER='Loulisse',GH_REPO='aurora-budget',GH_FILE='family-data.json';
 var GH_API='https://api.github.com/repos/'+GH_OWNER+'/'+GH_REPO+'/contents/'+GH_FILE;
 var LS='aurora_v8';
-var S={prenom:'',familyId:null,incomes:[],factures:[],charges:[],bocaux:[]};
+var S={prenom:'',familyId:null,membre2:'',incomes:[],factures:[],charges:[],bocaux:[],virements:[]};
 var GH_TOKEN='';
 var selPrio=3,scopes={inc:'personal',fac:'personal',ch:'personal',boc:'personal'};
 var facFilter='urgent',fabOpen=false;
@@ -482,13 +516,13 @@ window.doLogin=function(){
 window.doSignOut=function(){if(!confirm('Se deconnecter ?'))return;S.prenom='';save();gid('screen-main').classList.remove('active');gid('screen-auth').classList.add('active');};
 function updateBar(){var h=new Date().getHours();gid('tb-greeting').textContent=h<12?'Bonjour':'Bonsoir';gid('tb-name').textContent=S.prenom||'Aurora';gid('tb-avatar').textContent=(S.prenom||'A')[0].toUpperCase();}
 
-window.switchTab=function(name,el){document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('active');});gid('page-'+name).classList.add('active');if(el)el.classList.add('active');if(name==='bilan')renderBilan();if(name==='paiement')renderPaiement();if(name==='factures')renderFactures();if(name==='charges')renderCharges();if(name==='epargne')renderEpargne();};
+window.switchTab=function(name,el){document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('active');});gid('page-'+name).classList.add('active');if(el)el.classList.add('active');if(name==='bilan')renderBilan();if(name==='paiement')renderPaiement();if(name==='factures')renderFactures();if(name==='charges')renderCharges();if(name==='epargne')renderEpargne();if(name==='famille')renderFamille();};
 window.openSheet=function(id){closeFab();gid(id).classList.add('open');document.body.style.overflow='hidden';if(id==='sheet-profile')renderProfile();};
 window.closeSheet=function(id){gid(id).classList.remove('open');document.body.style.overflow='';};
 window.toggleFab=function(){fabOpen=!fabOpen;gid('fab-menu').classList.toggle('open',fabOpen);gid('fab-main').style.transform=fabOpen?'rotate(45deg)':'';gid('fab-main').style.background=fabOpen?'var(--terra)':'';};
 window.closeFab=function(){fabOpen=false;gid('fab-menu').classList.remove('open');gid('fab-main').style.transform='';gid('fab-main').style.background='';};
 
-function renderProfile(){gid('p-prenom').value=S.prenom||'';gid('p-fcode').value=S.familyId||'';gid('profile-info').innerHTML='<div style="display:flex;align-items:center;gap:12px;"><div class="topbar-avatar" style="width:46px;height:46px;">'+((S.prenom||'A')[0].toUpperCase())+'</div><div><div style="font-weight:700;">'+(S.prenom||'Vous')+'</div></div></div>';gid('token-area').innerHTML=GH_TOKEN?'<div style="font-size:.72rem;background:var(--sage-l);color:var(--sage);padding:8px 12px;border-radius:10px;font-weight:600;display:flex;align-items:center;justify-content:space-between;">Sync active <button id="rm-token" style="background:none;border:none;color:var(--red);font-size:.72rem;cursor:pointer;font-weight:700;">Supprimer</button></div>':'<div style="display:flex;gap:8px;"><input class="f-input" id="token-inp" type="password" placeholder="ghp_..." style="flex:1;font-size:14px;"/><button class="btn btn-sage btn-sm" id="save-token-btn" type="button">Activer</button></div>';}
+function renderProfile(){gid('p-prenom').value=S.prenom||'';gid('p-fcode').value=S.familyId||'';if(gid('p-membre2'))gid('p-membre2').value=S.membre2||'';gid('profile-info').innerHTML='<div style="display:flex;align-items:center;gap:12px;"><div class="topbar-avatar" style="width:46px;height:46px;">'+((S.prenom||'A')[0].toUpperCase())+'</div><div><div style="font-weight:700;">'+(S.prenom||'Vous')+'</div></div></div>';gid('token-area').innerHTML=GH_TOKEN?'<div style="font-size:.72rem;background:var(--sage-l);color:var(--sage);padding:8px 12px;border-radius:10px;font-weight:600;display:flex;align-items:center;justify-content:space-between;">Sync active <button id="rm-token" style="background:none;border:none;color:var(--red);font-size:.72rem;cursor:pointer;font-weight:700;">Supprimer</button></div>':'<div style="display:flex;gap:8px;"><input class="f-input" id="token-inp" type="password" placeholder="ghp_..." style="flex:1;font-size:14px;"/><button class="btn btn-sage btn-sm" id="save-token-btn" type="button">Activer</button></div>';}
 window.saveProfile=function(){S.prenom=gid('p-prenom').value.trim()||S.prenom;save();updateBar();closeSheet('sheet-profile');toast('Profil mis a jour');};
 window.copyCode=function(){var code=S.familyId||'';if(navigator.clipboard)navigator.clipboard.writeText(code).then(function(){toast('Code copie !');});else{gid('p-fcode').select();document.execCommand('copy');toast('Code copie !');}};
 window.joinFromProfile=function(){var c=gid('p-join').value.trim().toUpperCase();if(!c.startsWith('FAM-')){toast('Code invalide','e');return;}S.familyId=c;save();gid('p-fcode').value=c;gid('p-join').value='';pullFam(function(){renderBilan();toast('Famille chargee');});};
@@ -535,14 +569,14 @@ function renderPaiement(){
   var total=s1.reduce(function(a,f){return a+(+f.montant||0);},0)+s3.reduce(function(a,f){return a+(+f.montant||0);},0)+s4.reduce(function(a,f){return a+(+f.montant||0);},0);
   var cont=gid('paiement-content');cont.innerHTML='';
   var pt=mkEl('div',{className:'pay-total'});pt.innerHTML='<div class="pay-total-label">Total factures a payer</div><div class="pay-total-amount">'+fmt(total)+'</div><div class="pay-total-sub">Par ordre de priorite</div>';cont.appendChild(pt);
-  function piEl(nom,montant,sub,clickFn,color){var el=mkEl('div',{className:'pay-item'});el.innerHTML='<div class="pay-item-left"><div class="pay-item-name">'+nom+'</div><div class="pay-item-sub">'+sub+'</div></div><div class="pay-item-amount" style="color:'+color+';">'+fmt(montant)+'</div>';el.addEventListener('click',clickFn);return el;}
+  function piEl(nom,montant,sub,clickFn,color,payeur,part){var el=mkEl('div',{className:'pay-item'});var payTag=payeur?'<span class="fac-tag tag-fam" style="margin-top:3px;display:inline-flex;">'+payeur+(part&&part<100?' '+part+'%':'')+'</span>':'';el.innerHTML='<div class="pay-item-left"><div class="pay-item-name">'+nom+'</div><div class="pay-item-sub">'+sub+payTag+'</div></div><div class="pay-item-amount" style="color:'+color+';">'+fmt(montant)+'</div>';el.addEventListener('click',clickFn);return el;}
   var mf={monthly:1,bimonthly:.5,quarterly:1/3,yearly:1/12};var fl={monthly:'Mensuelle',bimonthly:'Bimestrielle',quarterly:'Trimestrielle',yearly:'Annuelle'};
-  if(s1.length){cont.appendChild(mkEl('div',{className:'pay-shd s1',textContent:'1 - Urgentes / en retard'}));s1.forEach(function(f){cont.appendChild(piEl(f.nom,f.montant,fmtD(f.echeance)+(f.ref?' - Ref: '+f.ref:''),function(){openFacDetail(f.id);},'var(--red)'));});}
+  if(s1.length){cont.appendChild(mkEl('div',{className:'pay-shd s1',textContent:'1 - Urgentes / en retard'}));s1.forEach(function(f){cont.appendChild(piEl(f.nom,f.montant,fmtD(f.echeance)+(f.ref?' - Ref: '+f.ref:''),function(){openFacDetail(f.id);},'var(--red)',f.scope==='family'?f.payeur:null,f.part));});}
   if(s2.length){cont.appendChild(mkEl('div',{className:'pay-shd s2',textContent:'2 - Charges fixes'}));s2.forEach(function(c){cont.appendChild(piEl(c.nom,c.montant*(mf[c.freq]||1),(fl[c.freq]||''),function(){openAddCharge(c.id);},'var(--terra)'));});}
-  if(s3.length){cont.appendChild(mkEl('div',{className:'pay-shd s2',textContent:'3 - Rappels'}));s3.forEach(function(f){cont.appendChild(piEl(f.nom,f.montant,'Echeance: '+fmtD(f.echeance),function(){openFacDetail(f.id);},'var(--terra)'));});}
-  if(s4.length){cont.appendChild(mkEl('div',{className:'pay-shd s3',textContent:'4 - En cours'}));s4.forEach(function(f){cont.appendChild(piEl(f.nom,f.montant,'Echeance: '+fmtD(f.echeance),function(){openFacDetail(f.id);},'var(--gold)'));});}
+  if(s3.length){cont.appendChild(mkEl('div',{className:'pay-shd s2',textContent:'3 - Rappels'}));s3.forEach(function(f){cont.appendChild(piEl(f.nom,f.montant,'Echeance: '+fmtD(f.echeance),function(){openFacDetail(f.id);},'var(--terra)',f.scope==='family'?f.payeur:null,f.part));});}
+  if(s4.length){cont.appendChild(mkEl('div',{className:'pay-shd s3',textContent:'4 - En cours'}));s4.forEach(function(f){cont.appendChild(piEl(f.nom,f.montant,'Echeance: '+fmtD(f.echeance),function(){openFacDetail(f.id);},'var(--gold)',f.scope==='family'?f.payeur:null,f.part));});}
   if(s5.length){var libre=Math.max(0,calcCap()-calcDues()),td=s5.reduce(function(a,b){return a+b.desir;},0);cont.appendChild(mkEl('div',{className:'pay-shd s4',textContent:'5 - Epargne suggeree'}));s5.forEach(function(b){var sh=td>0?(b.desir/td)*(libre*.1):0;cont.appendChild(piEl(b.nom.replace(/^\S+\s/,''),sh,b.nom.split(' ')[0]+' - '+Math.min(100,b.actuel/b.objectif*100).toFixed(0)+'%',function(){openBocalDetail(b.id);},'var(--sage)'));});}
-  if(s6.length){cont.appendChild(mkEl('div',{className:'pay-shd s5',textContent:'6 - En avance'}));s6.forEach(function(f){cont.appendChild(piEl(f.nom,f.montant,'Echeance: '+fmtD(f.echeance),function(){openFacDetail(f.id);},'var(--ink3)'));});}
+  if(s6.length){cont.appendChild(mkEl('div',{className:'pay-shd s5',textContent:'6 - En avance'}));s6.forEach(function(f){cont.appendChild(piEl(f.nom,f.montant,'Echeance: '+fmtD(f.echeance),function(){openFacDetail(f.id);},'var(--ink3)',f.scope==='family'?f.payeur:null,f.part));});}
   if(cont.children.length<=1){cont.innerHTML='<div class="empty-state"><div class="empty-emoji">&#127881;</div><div class="empty-msg">Rien a payer !</div></div>';}
 }
 
@@ -563,7 +597,7 @@ function renderEpargne(){var libre=Math.max(0,calcCap()-calcDues()),td=S.bocaux.
 
 window.openBocalDetail=function(id){var b=S.bocaux.find(function(x){return x.id===id;});if(!b)return;curBocId=id;gid('db-title').textContent=b.nom;var cont=gid('db-body');cont.innerHTML='<div class="metric-row"><div class="metric"><div class="metric-val" style="color:var(--sage)">'+fmt(b.actuel)+'</div><div class="metric-lbl">Epargne</div></div><div class="metric"><div class="metric-val">'+fmt(Math.max(0,b.objectif-b.actuel))+'</div><div class="metric-lbl">Manquant</div></div></div><div class="f-group" style="margin-top:12px;"><label class="f-label">Ajouter</label><div style="display:flex;gap:8px;"><input class="f-input" type="number" id="ba-amt" placeholder="50" style="flex:1;"/><button class="btn btn-sage btn-sm" id="add-boc-btn" type="button">Ajouter</button></div></div><div class="f-group"><label class="f-label">Retirer</label><div style="display:flex;gap:8px;"><input class="f-input" type="number" id="br-amt" placeholder="50" style="flex:1;"/><button class="btn btn-outline btn-sm" id="rem-boc-btn" type="button">Retirer</button></div></div><button class="btn btn-outline" id="edit-boc-btn" type="button" style="margin-top:8px;">Modifier le bocal</button>';gid('add-boc-btn').addEventListener('click',function(){var a=parseFloat(gid('ba-amt').value)||0;if(!a)return;b.actuel=Math.min(b.objectif,b.actuel+a);save();schedSync();toast('+'+fmt(a));closeSheet('sheet-db');renderEpargne();renderBilan();});gid('rem-boc-btn').addEventListener('click',function(){var a=parseFloat(gid('br-amt').value)||0;if(!a)return;b.actuel=Math.max(0,b.actuel-a);save();schedSync();toast(fmt(a)+' retire');closeSheet('sheet-db');renderEpargne();renderBilan();});gid('edit-boc-btn').addEventListener('click',function(){closeSheet('sheet-db');setTimeout(function(){openAddBocal(curBocId);},320);});openSheet('sheet-db');};
 
-window.setScope=function(p,v){scopes[p]=v;var sp=gid(p+'-sp'),sf=gid(p+'-sf');if(!sp||!sf)return;sp.className='scope-btn'+(v==='personal'?' ap':'');sf.className='scope-btn'+(v==='family'?' af':'');};
+window.setScope=function(p,v){scopes[p]=v;var sp=gid(p+'-sp'),sf=gid(p+'-sf');if(!sp||!sf)return;sp.className='scope-btn'+(v==='personal'?' ap':'');sf.className='scope-btn'+(v==='family'?' af':'');if(p==='fac'){var pg=gid('fac-payeur-group');if(pg)pg.style.display=v==='family'?'block':'none';if(v==='family')renderPayeurToggle();}};
 window.setPrio=function(p){selPrio=p;[1,2,3,4].forEach(function(i){var b=gid('prio-'+i);if(b)b.className='prio-btn'+(i===p?' sel-'+p:'');});};
 
 window.stopCams=function(){if(camStream){camStream.getTracks().forEach(function(t){t.stop();});camStream=null;}clearInterval(scanTick);scanTick=null;gid('cam-qr').style.display='none';};
@@ -577,16 +611,205 @@ window.saveIncome=function(){var a=parseFloat(gid('inc-amount').value)||0;if(!a)
 window.deleteIncome=function(){var id=gid('inc-eid').value;if(!id)return;if(!confirm('Supprimer ?'))return;S.incomes=S.incomes.filter(function(x){return x.id!==id;});save();schedSync();closeSheet('sheet-add-income');toast('Supprime','e');renderBilan();};
 
 window.openAddFac=function(editId){var f=editId?S.factures.find(function(x){return x.id===editId;}):null;gid('fac-title').textContent=f?'Modifier':'Nouvelle facture';gid('fac-eid').value=editId||'';gid('fac-del').style.display=f?'':'none';gid('fac-nom').value=f?f.nom:'';gid('fac-montant').value=f?f.montant:'';gid('fac-echeance').value=f?f.echeance:(function(){var d=new Date();d.setDate(d.getDate()+30);return d.toISOString().split('T')[0];})();gid('fac-ref').value=f?f.ref||'':'';gid('fac-iban').value=f?f.iban||'':'';setPrio(f?f.prio:3);setScope('fac',f?f.scope:'personal');currentPhoto=f?f.photo:null;var th=gid('photo-thumb');th.style.display=currentPhoto?'block':'none';if(currentPhoto)th.src=currentPhoto;gid('qr-ok').style.display='none';gid('cam-qr').style.display='none';gid('btn-scan').textContent='Ouvrir la camera';stopCams();openSheet('sheet-add-facture');};
-window.saveFacture=function(){var n=gid('fac-nom').value.trim(),m=parseFloat(gid('fac-montant').value)||0;if(!n){toast('Entrez le creancier','e');return;}if(!m){toast('Entrez un montant','e');return;}var eid=gid('fac-eid').value;var d={id:eid||'f'+uid(),nom:n,montant:m,echeance:gid('fac-echeance').value,ref:gid('fac-ref').value.trim(),iban:gid('fac-iban').value.trim(),prio:selPrio,scope:scopes.fac,photo:currentPhoto||null,paid:false,paidDate:null};if(eid){var idx=S.factures.findIndex(function(x){return x.id===eid;});if(idx>-1){d.paid=S.factures[idx].paid;d.paidDate=S.factures[idx].paidDate;S.factures[idx]=d;}}else S.factures.push(d);save();schedSync();stopCams();currentPhoto=null;closeSheet('sheet-add-facture');toast(eid?'Facture modifiee':'Facture enregistree');['fac-nom','fac-montant','fac-ref','fac-iban'].forEach(function(id){var e=gid(id);if(e)e.value='';});gid('photo-thumb').style.display='none';renderBilan();renderFactures();renderPaiement();};
+window.saveFacture=function(){var n=gid('fac-nom').value.trim(),m=parseFloat(gid('fac-montant').value)||0;if(!n){toast('Entrez le creancier','e');return;}if(!m){toast('Entrez un montant','e');return;}var eid=gid('fac-eid').value;var payeur=scopes.fac==='family'?(gid('fac-payeur-sel')?gid('fac-payeur-sel').getAttribute('data-val'):S.prenom):S.prenom;var part=scopes.fac==='family'?(parseFloat(gid('fac-part').value)||50):100;var d={id:eid||'f'+uid(),nom:n,montant:m,echeance:gid('fac-echeance').value,ref:gid('fac-ref').value.trim(),iban:gid('fac-iban').value.trim(),prio:selPrio,scope:scopes.fac,payeur:payeur,part:part,photo:currentPhoto||null,paid:false,paidDate:null};if(eid){var idx=S.factures.findIndex(function(x){return x.id===eid;});if(idx>-1){d.paid=S.factures[idx].paid;d.paidDate=S.factures[idx].paidDate;S.factures[idx]=d;}}else S.factures.push(d);save();schedSync();stopCams();currentPhoto=null;closeSheet('sheet-add-facture');toast(eid?'Facture modifiee':'Facture enregistree');['fac-nom','fac-montant','fac-ref','fac-iban'].forEach(function(id){var e=gid(id);if(e)e.value='';});gid('photo-thumb').style.display='none';renderBilan();renderFactures();renderPaiement();};
 window.deleteFacForm=function(){var id=gid('fac-eid').value;if(!id)return;if(!confirm('Supprimer ?'))return;S.factures=S.factures.filter(function(x){return x.id!==id;});save();schedSync();closeSheet('sheet-add-facture');toast('Supprimee','e');renderBilan();renderFactures();renderPaiement();};
 
-window.openAddCharge=function(editId){var c=editId?S.charges.find(function(x){return x.id===editId;}):null;gid('ch-title').textContent=c?'Modifier':'Charge fixe';gid('ch-eid').value=editId||'';gid('ch-del').style.display=c?'':'none';gid('ch-nom').value=c?c.nom:'';gid('ch-montant').value=c?c.montant:'';gid('ch-freq').value=c?c.freq:'monthly';gid('ch-cat').value=c?c.cat:'Loyer / Charges';setScope('ch',c?c.scope:'personal');openSheet('sheet-add-charge');};
-window.saveCharge=function(){var n=gid('ch-nom').value.trim(),m=parseFloat(gid('ch-montant').value)||0;if(!n||!m){toast('Remplissez les champs','e');return;}var eid=gid('ch-eid').value;var d={id:eid||'c'+uid(),nom:n,montant:m,freq:gid('ch-freq').value,cat:gid('ch-cat').value,scope:scopes.ch};if(eid){var idx=S.charges.findIndex(function(x){return x.id===eid;});if(idx>-1)S.charges[idx]=d;}else S.charges.push(d);save();schedSync();closeSheet('sheet-add-charge');toast(eid?'Charge modifiee':'Charge ajoutee');gid('ch-nom').value='';gid('ch-montant').value='';renderCharges();renderBilan();renderPaiement();};
+window.openAddCharge=function(editId){var c=editId?S.charges.find(function(x){return x.id===editId;}):null;gid('ch-title').textContent=c?'Modifier':'Charge fixe';gid('ch-eid').value=editId||'';gid('ch-del').style.display=c?'':'none';gid('ch-nom').value=c?c.nom:'';gid('ch-montant').value=c?c.montant:'';gid('ch-freq').value=c?c.freq:'monthly';gid('ch-cat').value=c?c.cat:'Loyer / Charges';setScope('ch',c?c.scope:'personal');if(gid('ch-payeur'))gid('ch-payeur').value=c?c.payeur||'':'';openSheet('sheet-add-charge');};
+window.saveCharge=function(){var n=gid('ch-nom').value.trim(),m=parseFloat(gid('ch-montant').value)||0;if(!n||!m){toast('Remplissez les champs','e');return;}var eid=gid('ch-eid').value;var payeur=gid('ch-payeur')?gid('ch-payeur').value.trim():'';var d={id:eid||'c'+uid(),nom:n,montant:m,freq:gid('ch-freq').value,cat:gid('ch-cat').value,scope:scopes.ch,payeur:payeur||null};if(eid){var idx=S.charges.findIndex(function(x){return x.id===eid;});if(idx>-1)S.charges[idx]=d;}else S.charges.push(d);save();schedSync();closeSheet('sheet-add-charge');toast(eid?'Charge modifiee':'Charge ajoutee');gid('ch-nom').value='';gid('ch-montant').value='';renderCharges();renderBilan();renderPaiement();};
 window.deleteCharge=function(){var id=gid('ch-eid').value;if(!id)return;if(!confirm('Supprimer ?'))return;S.charges=S.charges.filter(function(x){return x.id!==id;});save();schedSync();closeSheet('sheet-add-charge');toast('Supprimee','e');renderCharges();renderBilan();renderPaiement();};
 
 window.openAddBocal=function(editId){var b=editId?S.bocaux.find(function(x){return x.id===editId;}):null;gid('boc-title').textContent=b?'Modifier':'Nouveau bocal';gid('boc-eid').value=editId||'';gid('boc-del').style.display=b?'':'none';gid('boc-nom').value=b?b.nom:'';gid('boc-obj').value=b?b.objectif:'';gid('boc-actuel').value=b?b.actuel:'';gid('boc-date').value=b?b.dateObj||'':'';gid('boc-desir').value=b?b.desir:5;gid('boc-desir-lbl').textContent=(b?b.desir:5)+'/10';setScope('boc',b?b.scope:'personal');openSheet('sheet-add-bocal');};
 window.saveBocal=function(){var n=gid('boc-nom').value.trim(),o=parseFloat(gid('boc-obj').value)||0;if(!n||!o){toast('Remplissez les champs','e');return;}var eid=gid('boc-eid').value;var d={id:eid||'b'+uid(),nom:n,objectif:o,actuel:parseFloat(gid('boc-actuel').value)||0,desir:parseInt(gid('boc-desir').value)||5,dateObj:gid('boc-date').value||null,scope:scopes.boc};if(eid){var idx=S.bocaux.findIndex(function(x){return x.id===eid;});if(idx>-1)S.bocaux[idx]=d;}else S.bocaux.push(d);save();schedSync();closeSheet('sheet-add-bocal');toast(eid?'Bocal modifie':'Bocal cree');['boc-nom','boc-obj','boc-actuel','boc-date'].forEach(function(id){var e=gid(id);if(e)e.value='';});renderEpargne();renderBilan();};
 window.deleteBocal=function(){var id=gid('boc-eid').value;if(!id)return;if(!confirm('Supprimer ?'))return;S.bocaux=S.bocaux.filter(function(x){return x.id!==id;});save();schedSync();closeSheet('sheet-add-bocal');renderEpargne();toast('Bocal supprime','e');};
+
+
+// ── PAYEUR TOGGLE ────────────────────────────────
+function renderPayeurToggle(){
+  var tog=gid('fac-payeur-toggle');
+  if(!tog)return;
+  var m1=S.prenom||'Moi';
+  var m2=S.membre2||'Partenaire';
+  tog.innerHTML='';
+  [m1,m2].forEach(function(name){
+    var btn=document.createElement('button');
+    btn.className='scope-btn'+(name===m1?' ap':'');
+    btn.textContent=name;
+    btn.type='button';
+    btn.id='fac-payeur-sel';
+    btn.setAttribute('data-val',name);
+    btn.addEventListener('click',function(){
+      tog.querySelectorAll('button').forEach(function(b){b.className='scope-btn';});
+      btn.className='scope-btn ap';
+    });
+    tog.appendChild(btn);
+  });
+  // Part listener
+  var partInp=gid('fac-part');
+  var partOther=gid('fac-part-other');
+  if(partInp&&partOther){
+    partInp.addEventListener('input',function(){
+      var v=Math.min(100,Math.max(0,parseFloat(partInp.value)||50));
+      partOther.textContent='Autre part: '+(100-v)+'%';
+    });
+  }
+}
+
+// ── CALCULS FAMILLE ──────────────────────────────
+function calcCapMembre(nom){
+  // Revenus du membre
+  var rev=S.incomes.filter(function(i){return i.payeur===nom||(!i.payeur&&i.scope==='personal'&&nom===S.prenom);}).reduce(function(a,i){return a+(+i.amount||0);},0);
+  if(nom===S.prenom) rev+=S.incomes.filter(function(i){return i.scope==='personal'&&!i.payeur;}).reduce(function(a,i){return a+(+i.amount||0);},0);
+
+  // Factures payees par ce membre
+  var depenses=S.factures.filter(function(f){return f.paid&&(f.payeur===nom||(f.scope==='personal'&&nom===S.prenom&&!f.payeur));}).reduce(function(a,f){
+    var part=f.scope==='family'?(f.payeur===nom?f.montant:0):f.montant;
+    return a+part;
+  },0);
+
+  // Bocaux du membre
+  var bocaux=S.bocaux.filter(function(b){return b.scope==='personal'||b.payeur===nom;}).reduce(function(a,b){return a+(+b.actuel||0);},0);
+
+  return rev-depenses-bocaux;
+}
+
+function calcCapPersonnel(){
+  // Capital du user courant
+  var rev=S.incomes.filter(function(i){return i.scope==='personal'||i.payeur===S.prenom;}).reduce(function(a,i){return a+(+i.amount||0);},0);
+  var depPerso=S.factures.filter(function(f){return f.paid&&f.scope==='personal'&&(!f.payeur||f.payeur===S.prenom);}).reduce(function(a,f){return a+(+f.montant||0);},0);
+  var depFamMoi=S.factures.filter(function(f){return f.paid&&f.scope==='family'&&f.payeur===S.prenom;}).reduce(function(a,f){return a+(+f.montant||0);},0);
+  var boc=S.bocaux.filter(function(b){return b.scope==='personal';}).reduce(function(a,b){return a+(+b.actuel||0);},0);
+  return rev-depPerso-depFamMoi-boc;
+}
+
+function calcDepensesTotalesMembre(nom){
+  return S.factures.filter(function(f){return f.paid&&(f.payeur===nom||(f.scope==='personal'&&nom===S.prenom&&!f.payeur));}).reduce(function(a,f){return a+(+f.montant||0);},0);
+}
+
+function calcEquilibre(){
+  // Calcule qui doit un virement a qui pour egaliser les soldes
+  var m1=S.prenom||'Moi';
+  var m2=S.membre2||'Partenaire';
+
+  var rev1=S.incomes.filter(function(i){return !i.payeur||i.payeur===m1;}).reduce(function(a,i){return a+(+i.amount||0);},0);
+  var rev2=S.incomes.filter(function(i){return i.payeur===m2;}).reduce(function(a,i){return a+(+i.amount||0);},0);
+
+  // Ce que chaque membre a paye en factures famille
+  var paye1=S.factures.filter(function(f){return f.paid&&f.scope==='family'&&(!f.payeur||f.payeur===m1);}).reduce(function(a,f){return a+(+f.montant||0);},0);
+  var paye2=S.factures.filter(function(f){return f.paid&&f.scope==='family'&&f.payeur===m2;}).reduce(function(a,f){return a+(+f.montant||0);},0);
+
+  // Depenses perso
+  var perso1=S.factures.filter(function(f){return f.paid&&f.scope==='personal'&&(!f.payeur||f.payeur===m1);}).reduce(function(a,f){return a+(+f.montant||0);},0);
+  var perso2=S.factures.filter(function(f){return f.paid&&f.scope==='personal'&&f.payeur===m2;}).reduce(function(a,f){return a+(+f.montant||0);},0);
+
+  // Bocaux
+  var boc1=S.bocaux.filter(function(b){return b.scope==='personal'||!b.payeur||b.payeur===m1;}).reduce(function(a,b){return a+(+b.actuel||0);},0);
+  var boc2=S.bocaux.filter(function(b){return b.payeur===m2;}).reduce(function(a,b){return a+(+b.actuel||0);},0);
+
+  var solde1=rev1-paye1-perso1-boc1;
+  var solde2=rev2-paye2-perso2-boc2;
+  var diff=solde1-solde2;
+
+  return {m1:m1,m2:m2,solde1:solde1,solde2:solde2,diff:diff,paye1:paye1,paye2:paye2,rev1:rev1,rev2:rev2};
+}
+
+// ── RENDER FAMILLE ───────────────────────────────
+function renderFamille(){
+  var cont=gid('famille-content');
+  cont.innerHTML='';
+  var eq=calcEquilibre();
+
+  // Card equilibre
+  var bc=document.createElement('div');
+  bc.className='balance-card';
+  var diff=eq.diff;
+  var msg=Math.abs(diff)<1?'Equilibre parfait !':
+    diff>0?eq.m1+' devrait virer '+fmt(diff/2)+' a '+eq.m2:
+    eq.m2+' devrait virer '+fmt(Math.abs(diff)/2)+' a '+eq.m1;
+  bc.innerHTML='<div class="balance-title">Equilibre famille</div>'
+    +'<div class="balance-amount">'+fmt(Math.min(eq.solde1,eq.solde2))+'</div>'
+    +'<div class="balance-sub">Solde minimal apres equilibrage</div>'
+    +'<div style="margin-top:12px;padding:10px 12px;background:rgba(255,255,255,.08);border-radius:10px;font-size:.78rem;color:rgba(255,255,255,.8);">'+msg+'</div>';
+  cont.appendChild(bc);
+
+  // Cards membres
+  [
+    {nom:eq.m1,rev:eq.rev1,paye:eq.paye1,solde:eq.solde1,isMe:true},
+    {nom:eq.m2,rev:eq.rev2,paye:eq.paye2,solde:eq.solde2,isMe:false}
+  ].forEach(function(m){
+    var mc=document.createElement('div');
+    mc.className='member-card';
+    mc.innerHTML='<div class="member-header">'
+      +'<div class="member-avatar">'+m.nom[0].toUpperCase()+'</div>'
+      +'<div><div class="member-name">'+m.nom+'</div>'
+      +'<div class="member-role">'+(m.isMe?'Vous':'Partenaire')+'</div></div></div>'
+      +'<div class="metric-row">'
+      +'<div class="metric"><div class="metric-val" style="color:var(--sage)">'+fmt(m.rev)+'</div><div class="metric-lbl">Revenus</div></div>'
+      +'<div class="metric"><div class="metric-val" style="color:var(--terra)">'+fmt(m.paye)+'</div><div class="metric-lbl">Paye (famille)</div></div>'
+      +'</div>'
+      +'<div style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:var(--ivory2);border-radius:var(--r-sm);">'
+      +'<span style="font-size:.75rem;color:var(--ink3);font-weight:600;">Solde restant</span>'
+      +'<span class="member-cap" style="color:'+(m.solde>=0?'var(--sage)':'var(--red)')+'">'+fmt(m.solde)+'</span>'
+      +'</div>';
+    cont.appendChild(mc);
+  });
+
+  // Factures famille a payer avec payeur attribue
+  var famFacs=S.factures.filter(function(f){return f.scope==='family'&&!f.paid;});
+  if(famFacs.length){
+    var hd=document.createElement('div');
+    hd.className='sec-hd';
+    hd.innerHTML='<div class="sec-title">Factures famille a payer</div>';
+    cont.appendChild(hd);
+    famFacs.sort(function(a,b){return a.prio-b.prio;}).forEach(function(f){
+      var el=document.createElement('div');
+      el.className='f-item p'+f.prio;
+      var payeurTag='<span class="fac-tag tag-fam">'+(f.payeur||'?')+'</span>';
+      var partTag=f.part&&f.part<100?'<span class="fac-tag tag-moi">'+f.part+'% / '+(100-f.part)+'%</span>':'';
+      el.innerHTML='<div class="f-body"><div class="f-name">'+f.nom+'</div>'
+        +'<div class="f-meta">'+payeurTag+partTag+'<span>'+fmtD(f.echeance)+'</span></div></div>'
+        +'<div class="f-amount">'+fmt(f.montant)+'</div>';
+      el.addEventListener('click',function(){openFacDetail(f.id);});
+      cont.appendChild(el);
+    });
+  }
+
+  // Charges fixes famille
+  var famCharges=S.charges.filter(function(c){return c.scope==='family';});
+  if(famCharges.length){
+    var hd2=document.createElement('div');
+    hd2.className='sec-hd';
+    hd2.innerHTML='<div class="sec-title">Charges fixes famille</div>';
+    cont.appendChild(hd2);
+    var fl={monthly:'Mensuelle',bimonthly:'Bimestrielle',quarterly:'Trimestrielle',yearly:'Annuelle'};
+    var mf={monthly:1,bimonthly:.5,quarterly:1/3,yearly:1/12};
+    famCharges.forEach(function(c){
+      var el=document.createElement('div');
+      el.className='charge-item';
+      var payeurTag=c.payeur?'<span class="fac-tag tag-fam">'+c.payeur+'</span>':'';
+      el.innerHTML='<div class="charge-body"><div class="charge-name">'+c.nom+'</div>'
+        +'<div class="charge-freq">'+(fl[c.freq]||'')+' '+payeurTag+'</div></div>'
+        +'<div class="charge-amount">'+fmt(c.montant*(mf[c.freq]||1))+'/mois</div>';
+      el.addEventListener('click',function(){openAddCharge(c.id);});
+      cont.appendChild(el);
+    });
+  }
+
+  if(!famFacs.length&&!famCharges.length&&eq.rev1===0&&eq.rev2===0){
+    var empty=document.createElement('div');
+    empty.className='empty-state';
+    empty.innerHTML='<div class="empty-emoji">&#128106;</div><div class="empty-msg">Ajoutez des elements Famille pour voir le bilan ici.</div>';
+    cont.appendChild(empty);
+  }
+}
+
+// Update saveProfile to save membre2 name
+window.saveProfileOld=window.saveProfile;
+window.saveProfile=function(){
+  S.prenom=gid('p-prenom').value.trim()||S.prenom;
+  var m2inp=gid('p-membre2');
+  if(m2inp)S.membre2=m2inp.value.trim();
+  save();updateBar();closeSheet('sheet-profile');toast('Profil mis a jour');
+};
 
 window.onload=function(){
   load();
