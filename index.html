@@ -408,7 +408,7 @@ html,body{height:100%;background:var(--ivory);color:var(--ink);font-family:var(-
   </div>
 </div>
 
-id="sheet-add-charge">
+<div class="sheet-overlay" id="sheet-add-charge">
   <div class="sheet"><div class="sheet-pill"></div>
     <div class="sheet-header"><div class="sheet-title" id="ch-title">Charge fixe</div><button class="sheet-close" onclick="closeSheet('sheet-add-charge')">x</button></div>
     <div class="sheet-body">
@@ -428,6 +428,7 @@ id="sheet-add-charge">
       </div>
     </div>
   </div>
+</div>
 </div>
 
 <div class="sheet-overlay" id="sheet-add-bocal">
@@ -1485,7 +1486,7 @@ window.deleteIncome=function(){var id=gid('inc-eid').value;if(!id)return;if(!con
 window.openAddFac=function(editId){
   var f=editId?S.factures.find(function(x){return x.id===editId;}):null;
   gid('fac-title').textContent=f?'Modifier la facture':'Nouvelle facture';
-  stopCams(); currentPhoto=f?f.photo:null;
+  try{stopCams();}catch(e){} currentPhoto=f?f.photo:null;
   if(f){
     // Edition directe : aller à l'étape 2
     renderFacStep2(f);
@@ -1749,46 +1750,43 @@ function renderFacStep2(editFac, qrData){
 }
 
 window.saveFacture=function(){
-  var labelEl=gid('fac-label');
-  var nomEl=gid('fac-nom');
-  var label=labelEl?labelEl.value.trim():'';
-  var emetteur=nomEl?nomEl.value.trim():'';
-  // Le nom affiché = label si rempli, sinon emetteur
-  var nom=label||emetteur;
+  function gv(id){var e=document.getElementById(id);return e?e.value.trim():'';}
+  var nom=gv('fac-label')||gv('fac-nom');
   if(!nom){toast('Donnez un nom a cette facture','e');return;}
-  var m=parseFloat(gid('fac-montant').value)||0;
+  var m=parseFloat(gv('fac-montant'))||0;
   if(!m){toast('Entrez un montant','e');return;}
-  var eid=gid('fac-eid').value;
+  var eid=gv('fac-eid');
   var d={
     id:eid||'f'+uid(),
     nom:nom,
-    emetteur:emetteur,
+    emetteur:gv('fac-nom'),
     montant:m,
-    echeance:gid('fac-echeance').value||'',
-    rappel:0,
-    ref:gid('fac-ref')?gid('fac-ref').value.trim():'',
-    iban:gid('fac-iban')?gid('fac-iban').value.trim():'',
+    echeance:gv('fac-echeance'),
+    rappel:eid?(function(){var f=S.factures.find(function(x){return x.id===eid;});return f?f.rappel||0:0;})():0,
+    ref:gv('fac-ref'),
+    iban:gv('fac-iban'),
     prio:selPrio,
     scope:scopes.fac,
     payeur:S.prenom,
-    part:100,
     photo:currentPhoto||null,
     paid:false,
     paidDate:null
   };
   if(eid){
     var idx=S.factures.findIndex(function(x){return x.id===eid;});
-    if(idx>-1){d.paid=S.factures[idx].paid;d.paidDate=S.factures[idx].paidDate;d.rappel=S.factures[idx].rappel||0;S.factures[idx]=d;}
+    if(idx>-1){d.paid=S.factures[idx].paid;d.paidDate=S.factures[idx].paidDate;S.factures[idx]=d;}
   } else {
     S.factures.push(d);
   }
-  save();schedSync();stopCams();currentPhoto=null;
+  save();schedSync();
+  try{stopCams();}catch(e){}
+  currentPhoto=null;
   closeSheet('sheet-add-facture');
   toast(eid?'Facture modifiee':'Facture enregistree');
-  ['fac-label','fac-nom','fac-montant'].forEach(function(id){var e=gid(id);if(e)e.value='';});
-  gid('photo-thumb').style.display='none';
   renderBilan();renderFactures();renderPaiement();
-};
+}
+
+
 window.deleteFacForm=function(){var id=gid('fac-eid').value;if(!id)return;if(!confirm('Supprimer ?'))return;S.factures=S.factures.filter(function(x){return x.id!==id;});save();schedSync();closeSheet('sheet-add-facture');toast('Supprimee','e');renderBilan();renderFactures();renderPaiement();};
 
 window.openChargeAction=function(id){
