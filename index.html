@@ -225,7 +225,7 @@ html,body{height:100%;background:var(--ivory);color:var(--ink);font-family:var(-
 .pay-card-name{font-weight:700;font-size:.92rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .pay-card-sub{font-size:.7rem;color:var(--ink3);margin-top:3px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
 .pay-card-amount{font-weight:800;font-size:1.05rem;flex-shrink:0;}
-.member-dot{display:inline-block;width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.member-dot{display:inline-block;width:12px;height:12px;border-radius:50%;flex-shrink:0;box-shadow:0 1px 4px rgba(0,0,0,.25);}
 .pay-section-title{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--ink3);padding:4px 0 8px;margin-top:14px;border-bottom:1px solid var(--border);margin-bottom:10px;}
 .pay-total-bar{background:var(--ink);border-radius:var(--r-lg);padding:20px;margin-bottom:16px;}
 .pay-total-bar .ptb-label{font-size:.63rem;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:rgba(255,255,255,.5);margin-bottom:4px;}
@@ -247,8 +247,8 @@ html,body{height:100%;background:var(--ivory);color:var(--ink);font-family:var(-
 .as-btn-pay{background:var(--sage);color:#fff;}
 .as-btn-detail{background:var(--ivory3);color:var(--ink);}
 .as-btn-cancel{background:transparent;color:var(--ink3);font-weight:500;}
-.color-picker{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px;}
-.color-dot-btn{width:36px;height:36px;border-radius:50%;border:3px solid transparent;cursor:pointer;transition:transform .15s;}
+.color-picker{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px;align-items:center;}
+.color-dot-btn{width:36px;height:36px;border-radius:50%;border:3px solid transparent;cursor:pointer;transition:transform .15s;-webkit-appearance:none;display:inline-block;flex-shrink:0;}
 .color-dot-btn.selected{border-color:var(--ink);transform:scale(1.15);}
 .member-card{background:#fff;border-radius:var(--r-lg);padding:18px;margin-bottom:12px;border:1.5px solid var(--border);box-shadow:var(--shadow-sm);}
 .member-header{display:flex;align-items:center;gap:12px;margin-bottom:14px;}
@@ -401,7 +401,7 @@ html,body{height:100%;background:var(--ivory);color:var(--ink);font-family:var(-
     <div class="sheet-header"><div class="sheet-title" id="fac-title">Facture</div><button class="sheet-close" onclick="closeSheet('sheet-add-facture');stopCams()">x</button></div>
     <div class="sheet-body">
       <div class="f-group">
-        <label class="f-label">&#128247; Photographier la facture</label>
+        <label class="f-label">&#128247; Scanner le QR code</label>
         <div style="display:flex;gap:8px;margin-bottom:8px;">
           <button class="btn btn-outline" id="btn-scan" onclick="startCam()" type="button" style="flex:1;">&#128247; Ouvrir camera</button>
           <label class="btn btn-outline" style="flex:1;cursor:pointer;justify-content:center;display:flex;align-items:center;gap:6px;">&#128193; Fichier<input type="file" id="file-input" accept="image/*,application/pdf" style="display:none" onchange="handleFile(event)"/></label>
@@ -414,12 +414,22 @@ html,body{height:100%;background:var(--ivory);color:var(--ink);font-family:var(-
             <div class="cam-line"></div>
           </div></div>
         </div>
-        <div style="font-size:.68rem;color:var(--ink3);margin-top:5px;">Pointez vers le QR code &#8594; appuyez pour capturer. Les infos se remplissent automatiquement.</div>
-        <div class="qr-ok" id="qr-ok">&#10003; QR lu - informations remplies automatiquement</div>
+        <div style="font-size:.68rem;color:var(--ink3);margin-top:5px;">Pointez le QR code de paiement &#8594; appuyez pour capturer. Emetteur et montant remplis automatiquement.</div>
+        <div class="qr-ok" id="qr-ok">&#10003; QR lu — informations remplies</div>
         <img id="photo-thumb" class="photo-thumb" alt=""/>
         <canvas id="photo-canvas" style="display:none;"></canvas>
+        <input type="hidden" id="fac-iban"/>
+        <input type="hidden" id="fac-ref"/>
       </div>
-      <div class="f-group"><label class="f-label">Emetteur *</label><input class="f-input" type="text" id="fac-nom" placeholder="Swisscom, Loyer..."/></div>
+      <div class="f-group">
+        <label class="f-label">Nom de la facture *</label>
+        <input class="f-input" type="text" id="fac-label" placeholder="Ex: Assurance Toyota, Loyer mai..."/>
+        <div style="font-size:.65rem;color:var(--ink3);margin-top:4px;">Votre nom personnel pour retrouver cette facture</div>
+      </div>
+      <div class="f-group">
+        <label class="f-label">Emetteur (depuis QR)</label>
+        <input class="f-input" type="text" id="fac-nom" placeholder="Rempli automatiquement..." readonly style="background:var(--ivory2);color:var(--ink3);"/>
+      </div>
       <div class="f-group"><label class="f-label">Montant (CHF) *</label><input class="f-input" type="number" id="fac-montant" placeholder="0.00" inputmode="decimal" step="0.01"/></div>
       <div class="f-group"><label class="f-label">Echeance</label><input class="f-input" type="date" id="fac-echeance"/></div>
 
@@ -562,7 +572,7 @@ function uid(){return Math.random().toString(36).slice(2,9).toUpperCase();}
 function toast(msg,t){var el=gid('toast');el.textContent=msg;el.className='toast show '+(t||'s');clearTimeout(el._t);el._t=setTimeout(function(){el.className='toast';},2800);}
 function confetti(x,y){['#5C7A5F','#C4622D','#C9943A','#3B6B8C','#C4393B'].forEach(function(c,i){var d=document.createElement('div');d.className='confetti-dot';d.style.cssText='left:'+(x+(Math.random()-.5)*80)+'px;top:'+y+'px;background:'+c+';animation-delay:'+(i*.06)+'s';document.body.appendChild(d);setTimeout(function(){d.remove();},1200);});}
 function save(){localStorage.setItem(LS,JSON.stringify(S));}
-function load(){try{var r=localStorage.getItem(LS);if(r)Object.assign(S,JSON.parse(r));}catch(e){}GH_TOKEN=localStorage.getItem('aurora_gh_token')||'';}
+function load(){try{var r=localStorage.getItem(LS);if(r)Object.assign(S,JSON.parse(r));}catch(e){}GH_TOKEN=localStorage.getItem('aurora_gh_token')||'';if(!S.couleur)S.couleur='#5C7A5F';}
 function ghH(){return{'Authorization':'token '+GH_TOKEN,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'};}
 function ghRead(cb){if(!GH_TOKEN){cb(null,null);return;}fetch(GH_API+'?t='+Date.now(),{headers:ghH()}).then(function(r){if(r.status===404){cb(null,null);return null;}return r.ok?r.json():null;}).then(function(j){if(!j){cb(null,null);return;}if(!j.content){cb(null,null);return;}try{cb(JSON.parse(atob(j.content.replace(/\n/g,''))),j.sha);}catch(e){cb(null,null);}}).catch(function(){cb(null,null);});}
 function ghWrite(data,sha,cb){if(!GH_TOKEN){if(cb)cb(false);return;}var body={message:'Aurora sync '+new Date().toISOString(),content:btoa(unescape(encodeURIComponent(JSON.stringify(data,null,2)))),branch:'main'};if(sha)body.sha=sha;fetch(GH_API,{method:'PUT',headers:ghH(),body:JSON.stringify(body)}).then(function(r){if(cb)cb(r.ok);}).catch(function(){if(cb)cb(false);});}
@@ -593,7 +603,7 @@ window.doLogin=function(){
   }
 };
 window.doSignOut=function(){if(!confirm('Se deconnecter ?'))return;S.prenom='';save();gid('screen-main').classList.remove('active');gid('screen-auth').classList.add('active');};
-function updateBar(){var h=new Date().getHours();gid('tb-greeting').textContent=h<12?'Bonjour':'Bonsoir';gid('tb-name').textContent=S.prenom||'Aurora';gid('tb-avatar').textContent=(S.prenom||'A')[0].toUpperCase();}
+function updateBar(){var h=new Date().getHours();gid('tb-greeting').textContent=h<12?'Bonjour':'Bonsoir';gid('tb-name').textContent=S.prenom||'Aurora';var av=gid('tb-avatar');av.textContent=(S.prenom||'A')[0].toUpperCase();av.style.background=S.couleur||'linear-gradient(135deg,var(--sage-m),var(--gold-l))';}
 
 window.switchTab=function(name,el){document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('active');});gid('page-'+name).classList.add('active');if(el)el.classList.add('active');if(name==='bilan')renderBilan();if(name==='revenus')renderRevenus();if(name==='paiement')renderPaiement();if(name==='factures')renderFactures();if(name==='charges')renderCharges();if(name==='epargne')renderEpargne();if(name==='famille')renderFamille();};
 window.openSheet=function(id){closeFab();gid(id).classList.add('open');document.body.style.overflow='hidden';if(id==='sheet-profile')renderProfile();};
@@ -1475,15 +1485,35 @@ window.setPrio=function(p){selPrio=p;[1,2,3,4].forEach(function(i){var b=gid('pr
 window.stopCams=function(){if(camStream){camStream.getTracks().forEach(function(t){t.stop();});camStream=null;}clearInterval(scanTick);scanTick=null;gid('cam-qr').style.display='none';};
 window.startCam=function(){if(camStream){stopCams();gid('btn-scan').textContent='Ouvrir la camera';return;}if(!navigator.mediaDevices){toast('Camera non disponible','e');return;}navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'},audio:false}).then(function(stream){camStream=stream;var vid=gid('vid-qr');vid.srcObject=stream;gid('cam-qr').style.display='block';gid('btn-scan').textContent='Appuyez sur la video pour capturer';scanTick=setInterval(function(){if(!vid.videoWidth)return;var cv=gid('qr-cv');cv.width=vid.videoWidth;cv.height=vid.videoHeight;cv.getContext('2d').drawImage(vid,0,0);var img=cv.getContext('2d').getImageData(0,0,cv.width,cv.height);var code=jsQR(img.data,img.width,img.height,{inversionAttempts:'dontInvert'});if(code)parseQR(code.data);},200);}).catch(function(){toast('Camera non disponible','e');});};
 window.capturePhoto=function(){var vid=gid('vid-qr');if(!vid.videoWidth)return;var cv=gid('photo-canvas');cv.width=vid.videoWidth;cv.height=vid.videoHeight;cv.getContext('2d').drawImage(vid,0,0);currentPhoto=cv.toDataURL('image/jpeg',.8);var th=gid('photo-thumb');th.src=currentPhoto;th.style.display='block';var img=cv.getContext('2d').getImageData(0,0,cv.width,cv.height);var code=jsQR(img.data,img.width,img.height,{inversionAttempts:'dontInvert'});if(code)parseQR(code.data);stopCams();gid('btn-scan').textContent='Scanner a nouveau';};
-function parseQR(raw){var lines=raw.split(/\r?\n/);if(lines[0]==='SPC'){if(lines[3]&&!gid('fac-iban').value)gid('fac-iban').value=lines[3].trim();if(lines[5]&&!gid('fac-nom').value)gid('fac-nom').value=lines[5].trim();if(lines[18]&&parseFloat(lines[18])>0&&!gid('fac-montant').value)gid('fac-montant').value=parseFloat(lines[18]).toFixed(2);if(lines[28]&&!gid('fac-ref').value)gid('fac-ref').value=lines[28].trim();gid('qr-ok').style.display='block';}else if(raw.length>5&&!gid('fac-ref').value){gid('fac-ref').value=raw.slice(0,80);gid('qr-ok').style.display='block';}}
+function parseQR(raw){
+  var lines=raw.split(/\r?\n/);
+  if(lines[0]==='SPC'){
+    // IBAN ligne 3
+    if(lines[3]&&lines[3].trim())gid('fac-iban').value=lines[3].trim();
+    // Emetteur ligne 5 (nom créancier)
+    if(lines[5]&&lines[5].trim())gid('fac-nom').value=lines[5].trim();
+    // Montant ligne 18
+    if(lines[18]&&parseFloat(lines[18])>0&&!gid('fac-montant').value)
+      gid('fac-montant').value=parseFloat(lines[18]).toFixed(2);
+    // Référence ligne 28
+    if(lines[28]&&lines[28].trim())gid('fac-ref').value=lines[28].trim();
+    // Pré-remplir le nom avec l'emetteur si vide
+    var labelInp=gid('fac-label');
+    if(labelInp&&!labelInp.value&&lines[5])labelInp.value=lines[5].trim();
+    gid('qr-ok').style.display='block';
+  } else if(raw.length>5){
+    if(gid('fac-ref'))gid('fac-ref').value=raw.slice(0,80);
+    gid('qr-ok').style.display='block';
+  }
+}
 window.handleFile=function(e){var file=e.target.files[0];if(!file)return;var reader=new FileReader();reader.onload=function(ev){currentPhoto=ev.target.result;if(file.type.startsWith('image/')){var th=gid('photo-thumb');th.src=currentPhoto;th.style.display='block';var img=new Image();img.onload=function(){var cv=gid('photo-canvas');cv.width=img.width;cv.height=img.height;cv.getContext('2d').drawImage(img,0,0);var d=cv.getContext('2d').getImageData(0,0,cv.width,cv.height);var code=jsQR(d.data,d.width,d.height,{inversionAttempts:'dontInvert'});if(code)parseQR(code.data);};img.src=currentPhoto;}else toast('Fichier charge');};reader.readAsDataURL(file);};
 
 window.openAddIncome=function(editId){var i=editId?S.incomes.find(function(x){return x.id===editId;}):null;gid('inc-title').textContent=i?'Modifier':'Entree d argent';gid('inc-eid').value=editId||'';gid('inc-del').style.display=i?'':'none';gid('inc-source').value=i?i.source:'Salaire';gid('inc-amount').value=i?i.amount:'';gid('inc-date').value=i?i.date:today();gid('inc-note').value=i?i.note||'':'';setScope('inc',i?i.scope:'personal');openSheet('sheet-add-income');};
 window.saveIncome=function(){var a=parseFloat(gid('inc-amount').value)||0;if(!a){toast('Entrez un montant','e');return;}var eid=gid('inc-eid').value;var d={id:eid||'i'+uid(),source:gid('inc-source').value,amount:a,date:gid('inc-date').value||today(),note:gid('inc-note').value,scope:scopes.inc};if(eid){var idx=S.incomes.findIndex(function(x){return x.id===eid;});if(idx>-1)S.incomes[idx]=d;}else S.incomes.push(d);save();schedSync();closeSheet('sheet-add-income');toast(eid?'Modifie':'+'+fmt(a));gid('inc-amount').value='';gid('inc-note').value='';renderBilan();};
 window.deleteIncome=function(){var id=gid('inc-eid').value;if(!id)return;if(!confirm('Supprimer ?'))return;S.incomes=S.incomes.filter(function(x){return x.id!==id;});save();schedSync();closeSheet('sheet-add-income');toast('Supprime','e');renderBilan();};
 
-window.openAddFac=function(editId){var f=editId?S.factures.find(function(x){return x.id===editId;}):null;gid('fac-title').textContent=f?'Modifier':'Nouvelle facture';gid('fac-eid').value=editId||'';gid('fac-del').style.display=f?'':'none';gid('fac-nom').value=f?f.nom:'';gid('fac-montant').value=f?f.montant:'';gid('fac-echeance').value=f?f.echeance:(function(){var d=new Date();d.setDate(d.getDate()+30);return d.toISOString().split('T')[0];})();setPrio(f?f.prio:3);setScope('fac',f?f.scope:'personal');currentPhoto=f?f.photo:null;var th=gid('photo-thumb');th.style.display=currentPhoto?'block':'none';if(currentPhoto)th.src=currentPhoto;gid('qr-ok').style.display='none';gid('cam-qr').style.display='none';gid('btn-scan').textContent='Ouvrir la camera';stopCams();openSheet('sheet-add-facture');};
-window.saveFacture=function(){var n=gid('fac-nom').value.trim(),m=parseFloat(gid('fac-montant').value)||0;if(!n){toast('Entrez le creancier','e');return;}if(!m){toast('Entrez un montant','e');return;}var eid=gid('fac-eid').value;var payeur=scopes.fac==='family'?S.prenom:S.prenom;var part=scopes.fac==='family'?(parseFloat(gid('fac-part').value)||50):100;var d={id:eid||'f'+uid(),nom:n,montant:m,echeance:gid('fac-echeance').value,rappel:0,ref:(gid('fac-ref')?gid('fac-ref').value.trim():''),iban:(gid('fac-iban')?gid('fac-iban').value.trim():''),prio:selPrio,scope:scopes.fac,payeur:payeur,part:part,photo:currentPhoto||null,paid:false,paidDate:null};if(eid){var idx=S.factures.findIndex(function(x){return x.id===eid;});if(idx>-1){d.paid=S.factures[idx].paid;d.paidDate=S.factures[idx].paidDate;d.rappel=S.factures[idx].rappel||0;S.factures[idx]=d;}}else S.factures.push(d);save();schedSync();stopCams();currentPhoto=null;closeSheet('sheet-add-facture');toast(eid?'Facture modifiee':'Facture enregistree');['fac-nom','fac-montant'].forEach(function(id){var e=gid(id);if(e)e.value='';});gid('photo-thumb').style.display='none';renderBilan();renderFactures();renderPaiement();};
+window.openAddFac=function(editId){var f=editId?S.factures.find(function(x){return x.id===editId;}):null;gid('fac-title').textContent=f?'Modifier':'Nouvelle facture';gid('fac-eid').value=editId||'';gid('fac-del').style.display=f?'':'none';gid('fac-nom').value=f?f.emetteur||'':'';if(gid('fac-label'))gid('fac-label').value=f?f.nom:'';gid('fac-montant').value=f?f.montant:'';gid('fac-echeance').value=f?f.echeance:(function(){var d=new Date();d.setDate(d.getDate()+30);return d.toISOString().split('T')[0];})();setPrio(f?f.prio:3);setScope('fac',f?f.scope:'personal');currentPhoto=f?f.photo:null;var th=gid('photo-thumb');th.style.display=currentPhoto?'block':'none';if(currentPhoto)th.src=currentPhoto;gid('qr-ok').style.display='none';gid('cam-qr').style.display='none';gid('btn-scan').textContent='Ouvrir la camera';stopCams();openSheet('sheet-add-facture');};
+window.saveFacture=function(){var n=gid('fac-nom').value.trim(),m=parseFloat(gid('fac-montant').value)||0;if(!n){toast('Entrez le creancier','e');return;}if(!m){toast('Entrez un montant','e');return;}var eid=gid('fac-eid').value;var payeur=scopes.fac==='family'?S.prenom:S.prenom;var part=scopes.fac==='family'?(parseFloat(gid('fac-part').value)||50):100;var d={id:eid||'f'+uid(),nom:n,montant:m,echeance:gid('fac-echeance').value,rappel:0,ref:(gid('fac-ref')?gid('fac-ref').value.trim():''),iban:(gid('fac-iban')?gid('fac-iban').value.trim():''),prio:selPrio,scope:scopes.fac,payeur:payeur,part:part,photo:currentPhoto||null,paid:false,paidDate:null};if(eid){var idx=S.factures.findIndex(function(x){return x.id===eid;});if(idx>-1){d.paid=S.factures[idx].paid;d.paidDate=S.factures[idx].paidDate;d.rappel=S.factures[idx].rappel||0;S.factures[idx]=d;}}else S.factures.push(d);save();schedSync();stopCams();currentPhoto=null;closeSheet('sheet-add-facture');toast(eid?'Facture modifiee':'Facture enregistree');['fac-label','fac-nom','fac-montant'].forEach(function(id){var e=gid(id);if(e)e.value='';});gid('photo-thumb').style.display='none';renderBilan();renderFactures();renderPaiement();};
 window.deleteFacForm=function(){var id=gid('fac-eid').value;if(!id)return;if(!confirm('Supprimer ?'))return;S.factures=S.factures.filter(function(x){return x.id!==id;});save();schedSync();closeSheet('sheet-add-facture');toast('Supprimee','e');renderBilan();renderFactures();renderPaiement();};
 
 window.openChargeAction=function(id){
@@ -1681,7 +1711,7 @@ function renderFamille(){
       el.className='f-item p'+f.prio;
       var payeurTag='<span class="fac-tag tag-fam">'+(f.payeur||'?')+'</span>';
       var partTag=f.part&&f.part<100?'<span class="fac-tag tag-moi">'+f.part+'% / '+(100-f.part)+'%</span>':'';
-      el.innerHTML='<div class="f-body"><div class="f-name">'+f.nom+'</div>'
+      el.innerHTML='<div class="f-body"><div class="f-name">'+f.nom+'</div>'+(f.emetteur&&f.emetteur!==f.nom?'<div style="font-size:.62rem;color:var(--ink3);margin-top:1px;">'+f.emetteur+'</div>':'')
         +'<div class="f-meta">'+payeurTag+partTag+'<span>'+fmtD(f.echeance)+'</span></div></div>'
         +'<div class="f-amount">'+fmt(f.montant)+'</div>';
       el.addEventListener('click',function(){openFacDetail(f.id);});
