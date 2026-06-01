@@ -653,7 +653,7 @@ function renderMembresList(){
     dot.style.cssText='width:32px;height:32px;border-radius:50%;background:'+(m.couleur||'#aaa')+';display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;font-size:.85rem;flex-shrink:0;';
     dot.textContent=(m.prenom||'?')[0].toUpperCase();
     var info=document.createElement('div');info.style.flex='1';
-    var sexeIcon=m.sexe==='F'?'👩':m.sexe==='M'?'👨':'🧒';
+    var sexeIcon=m.sexe==='F'?'&#128105;':m.sexe==='M'?'&#128104;':'&#128066;';
     info.innerHTML='<div style="font-weight:700;font-size:.87rem;">'+sexeIcon+' '+(m.prenom||'Membre')+'</div>'
       +'<div style="font-size:.68rem;color:var(--ink3);">'+getAgeLabel(m.dob)+'</div>';
     var editBtn=document.createElement('button');
@@ -672,7 +672,7 @@ function renderProfile(){
   renderColorPicker();
   renderMembresList();
   // Avatar info
-  var sexeIcon=S.sexe==='F'?'👩':S.sexe==='M'?'👨':'🧑';
+  var sexeIcon=S.sexe==='F'?'&#128105;':S.sexe==='M'?'&#128104;':'&#129485;';
   var ageStr=S.dateNaissance?(' · '+getAgeLabel(S.dateNaissance)):'';
   gid('profile-info').innerHTML='<div style="display:flex;align-items:center;gap:12px;margin-bottom:4px;">'
     +'<div style="width:50px;height:50px;border-radius:50%;background:'+(S.couleur||'var(--sage-m)')+';display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;font-size:1.2rem;">'+((S.prenom||'A')[0].toUpperCase())+'</div>'
@@ -976,12 +976,12 @@ function renderBilanPerso(cont){
     el.addEventListener('click',action);return el;
   }
   var grid=document.createElement('div');grid.className='metric-row';grid.style.gridTemplateColumns='1fr 1fr';
-  grid.appendChild(catCard('💸','Revenus',rev,'var(--sage)',function(){switchTab('revenus',gid('nav-revenus'));}));
-  grid.appendChild(catCard('📋','Factures',facNP,'var(--red)',function(){switchTab('factures',gid('nav-factures'));}));
+  grid.appendChild(catCard('&#128184;','Revenus',rev,'var(--sage)',function(){switchTab('revenus',gid('nav-revenus'));}));
+  grid.appendChild(catCard('&#128203;','Factures',facNP,'var(--red)',function(){switchTab('factures',gid('nav-factures'));}));
   cont.appendChild(grid);
   var grid2=document.createElement('div');grid2.className='metric-row';grid2.style.gridTemplateColumns='1fr 1fr';
-  grid2.appendChild(catCard('🔄','Charges/mois',charges,'var(--terra)',function(){switchTab('charges',gid('nav-charges'));}));
-  grid2.appendChild(catCard('🐷','Épargne',bocaux,'var(--blue)',function(){switchTab('epargne',gid('nav-epargne'));}));
+  grid2.appendChild(catCard('&#128257;','Charges/mois',charges,'var(--terra)',function(){switchTab('charges',gid('nav-charges'));}));
+  grid2.appendChild(catCard('&#129412;','Épargne',bocaux,'var(--blue)',function(){switchTab('epargne',gid('nav-epargne'));}));
   cont.appendChild(grid2);
 
   // ── GRAPHIQUE ──
@@ -992,7 +992,7 @@ function renderBilanPerso(cont){
   renderPrediction(cont, history);
 
   if(!rev&&!facNP&&!charges){
-    cont.innerHTML='<div class="empty-state"><div class="empty-emoji">🌿</div><div class="empty-msg">Tout est calme.<br>Appuyez sur + pour commencer.</div></div>';
+    cont.innerHTML='<div class="empty-state"><div class="empty-emoji">&#127807;</div><div class="empty-msg">Tout est calme.<br>Appuyez sur + pour commencer.</div></div>';
   }
 }
 
