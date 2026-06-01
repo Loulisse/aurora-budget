@@ -268,6 +268,12 @@ html,body{height:100%;background:var(--ivory);color:var(--ink);font-family:var(-
 .tag-autre{background:var(--ivory3);color:var(--ink3);}
 .tag-fam{background:var(--sage-l);color:var(--sage);}
 </style>
+
+  <!-- PWA manifest inline -->
+  <link rel="manifest" href="data:application/json,{&quot;name&quot;:&quot;Aurora Budget&quot;,&quot;short_name&quot;:&quot;Aurora&quot;,&quot;start_url&quot;:&quot;/aurora-budget/&quot;,&quot;display&quot;:&quot;standalone&quot;,&quot;background_color&quot;:&quot;%23f8f7f3&quot;,&quot;theme_color&quot;:&quot;%235C7A5F&quot;,&quot;icons&quot;:[{&quot;src&quot;:&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%235C7A5F' rx='22'/%3E%3Ctext y='.9em' font-size='80' x='10'%3E🌿%3C/text%3E%3C/svg%3E&quot;,&quot;sizes&quot;:&quot;any&quot;,&quot;type&quot;:&quot;image/svg+xml&quot;}]}"/>
+  <meta name="apple-mobile-web-app-title" content="Aurora"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%235C7A5F' rx='22'/%3E%3Ctext y='.9em' font-size='80' x='10'%3E🌿%3C/text%3E%3C/svg%3E"/>
 </head>
 <body>
 <div id="app">
@@ -559,7 +565,7 @@ window.doLogin=function(){
   }
 };
 window.doSignOut=function(){if(!confirm('Se deconnecter ?'))return;S.prenom='';save();gid('screen-main').classList.remove('active');gid('screen-auth').classList.add('active');};
-function updateBar(){var h=new Date().getHours();gid('tb-greeting').textContent=h<12?'Bonjour':'Bonsoir';gid('tb-name').textContent=S.prenom||'Aurora';var av=gid('tb-avatar');av.textContent=(S.prenom||'A')[0].toUpperCase();av.style.background=S.couleur||'linear-gradient(135deg,var(--sage-m),var(--gold-l))';}
+function updateBar(){var h=new Date().getHours();var gr=h<6?'Bonne nuit':h<12?'Bonjour':h<18?'Bon apres-midi':h<22?'Bonsoir':'Bonne nuit';gid('tb-greeting').textContent=gr;gid('tb-name').textContent=S.prenom||'Aurora';var av=gid('tb-avatar');av.textContent=(S.prenom||'A')[0].toUpperCase();av.style.background=S.couleur||'linear-gradient(135deg,var(--sage-m),var(--gold-l))';}
 
 window.switchTab=function(name,el){document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('active');});gid('page-'+name).classList.add('active');if(el)el.classList.add('active');if(name==='bilan')renderBilan();if(name==='revenus')renderRevenus();if(name==='paiement')renderPaiement();if(name==='factures')renderFactures();if(name==='charges')renderCharges();if(name==='epargne')renderEpargne();if(name==='famille')renderFamille();};
 window.openSheet=function(id){closeFab();gid(id).classList.add('open');document.body.style.overflow='hidden';if(id==='sheet-profile')renderProfile();};
@@ -672,8 +678,8 @@ function renderProfile(){
     +'<div style="width:50px;height:50px;border-radius:50%;background:'+(S.couleur||'var(--sage-m)')+';display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;font-size:1.2rem;">'+((S.prenom||'A')[0].toUpperCase())+'</div>'
     +'<div><div style="font-weight:700;font-size:1rem;">'+sexeIcon+' '+(S.prenom||'Vous')+'</div>'
     +'<div style="font-size:.7rem;color:var(--ink3);">'+ageStr+'</div></div></div>';
-    var ta=gid('token-area');if(!ta)return;
-  if(GH_TOKEN){
+    var ta=gid('token-area');
+  if(ta){if(GH_TOKEN){
     ta.innerHTML='<div style="font-size:.72rem;background:var(--sage-l);color:var(--sage);padding:10px 12px;border-radius:10px;font-weight:600;display:flex;align-items:center;justify-content:space-between;">&#9729; Sync GitHub active<button id="rm-token" type="button" style="background:none;border:none;color:var(--red);font-size:.72rem;cursor:pointer;font-weight:700;padding:0;">Supprimer</button></div>';
   } else {
     ta.innerHTML='<div style="display:flex;gap:8px;margin-bottom:6px;"><input class="f-input" id="token-inp" type="password" placeholder="ghp_xxxxx..." style="flex:1;font-size:15px;"/><button class="btn btn-sage btn-sm" id="save-token-btn" type="button">Activer</button></div><div style="font-size:.65rem;color:var(--ink3);">Token GitHub (Settings → Developer → Personal access tokens)</div>';
@@ -834,54 +840,162 @@ function renderBilan(){
   else renderBilanFamille(cont);
 }
 
+function calcHealthScore(){
+  var mf={daily:30,weekly:4.33,monthly:1,bimonthly:.5,quarterly:1/3,biannual:1/6,yearly:1/12};
+  var rev=S.incomes.reduce(function(a,i){return a+(+i.amount||0);},0);
+  var facNP=S.factures.filter(function(f){return !f.paid;}).reduce(function(a,f){return a+(+f.montant||0);},0);
+  var charges=S.charges.reduce(function(a,c){return a+(+c.montant||0)*(mf[c.freq]||1);},0);
+  var boc=S.bocaux.reduce(function(a,b){return a+(+b.actuel||0);},0);
+  var bocObj=Math.max(1,S.bocaux.reduce(function(a,b){return a+(+b.objectif||0);},0));
+  var urg=S.factures.filter(function(f){return !f.paid&&f.prio===1;}).length;
+  var score=100;
+  if(rev>0) score-=Math.min(40,(facNP+charges)/rev*40);
+  score-=urg*8;
+  score+=Math.min(20,(boc/bocObj)*20);
+  if(rev===0) score=30;
+  score=Math.max(0,Math.min(100,Math.round(score)));
+  var grade=score>=85?'A':score>=70?'B':score>=55?'C':score>=40?'D':'F';
+  var color=score>=85?'var(--sage)':score>=70?'#3B6B8C':score>=55?'var(--gold)':score>=40?'var(--terra)':'var(--red)';
+  return {score:score,grade:grade,color:color,rev:rev,facNP:facNP,charges:charges,boc:boc,urg:urg};
+}
+
+function buildCapitalHistory(){
+  // Construire historique capital sur 6 mois depuis les revenus/factures
+  var months=[];
+  var now=new Date();
+  for(var mi=5;mi>=0;mi--){
+    var d=new Date(now.getFullYear(),now.getMonth()-mi,1);
+    var key=d.toISOString().slice(0,7);
+    months.push(key);
+  }
+  var history=[];
+  var running=0;
+  months.forEach(function(m){
+    var rev=S.incomes.filter(function(i){return i.date&&i.date.slice(0,7)===m;}).reduce(function(a,i){return a+(+i.amount||0);},0);
+    var dep=S.factures.filter(function(f){return f.paid&&f.paidDate&&f.paidDate.slice(0,7)===m;}).reduce(function(a,f){return a+(+f.montant||0);},0);
+    running+=rev-dep;
+    history.push({month:m,val:running,rev:rev,dep:dep});
+  });
+  return history;
+}
+
+function renderCapitalGraph(cont, history, color){
+  var W=300, H=80, pad=8;
+  var vals=history.map(function(h){return h.val;});
+  var minV=Math.min.apply(null,vals), maxV=Math.max.apply(null,vals);
+  var rng=Math.max(1,maxV-minV);
+  function px(i){return pad+(W-pad*2)*(i/(history.length-1||1));}
+  function py(v){return H-pad-(H-pad*2)*((v-minV)/rng);}
+  var pts=history.map(function(h,i){return px(i)+','+py(h.val);}).join(' ');
+  var area=pts+' '+px(history.length-1)+','+(H-pad)+' '+px(0)+','+(H-pad);
+
+  var svg='<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;display:block;" xmlns="http://www.w3.org/2000/svg">'
+    // Grille légère
+    +'<line x1="'+pad+'" y1="'+py(0)+'" x2="'+(W-pad)+'" y2="'+py(0)+'" stroke="rgba(0,0,0,0.08)" stroke-width="1" stroke-dasharray="3,3"/>'
+    // Zone
+    +'<polygon points="'+area+'" fill="'+color+'" opacity="0.12"/>'
+    // Ligne
+    +'<polyline points="'+pts+'" fill="none" stroke="'+color+'" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>'
+    // Points
+    +history.map(function(h,i){return '<circle cx="'+px(i)+'" cy="'+py(h.val)+'" r="3" fill="'+color+'"/>';}).join('')
+    // Labels mois
+    +history.map(function(h,i){
+      var lbl=h.month.slice(5);
+      return '<text x="'+px(i)+'" y="'+(H-1)+'" text-anchor="middle" font-size="7" fill="rgba(0,0,0,0.4)">'+lbl+'</text>';
+    }).join('')
+    +'</svg>';
+
+  var wrap=document.createElement('div');
+  wrap.style.cssText='background:var(--ivory2);border-radius:var(--r-sm);padding:10px 10px 4px;margin-top:10px;';
+  var lbl=document.createElement('div');
+  lbl.style.cssText='font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--ink3);margin-bottom:4px;';
+  lbl.textContent='Capital sur 6 mois';
+  wrap.innerHTML='';wrap.appendChild(lbl);
+  wrap.innerHTML+=svg;
+  cont.appendChild(wrap);
+}
+
+function renderPrediction(cont, hs){
+  var mf={daily:30,weekly:4.33,monthly:1,bimonthly:.5,quarterly:1/3,biannual:1/6,yearly:1/12};
+  var rev=S.incomes.reduce(function(a,i){return a+(+i.amount||0);},0);
+  var charges=S.charges.reduce(function(a,c){return a+(+c.montant||0)*(mf[c.freq]||1);},0);
+  var facNP=S.factures.filter(function(f){return !f.paid;}).reduce(function(a,f){return a+(+f.montant||0);},0);
+  var bocSug=Math.max(0,(rev-charges-facNP)*0.1);
+  var reste=rev-charges-facNP-bocSug;
+  var trend=hs.length>=2?(hs[hs.length-1].val-hs[0].val)/(hs.length-1||1):0;
+  var pred=hs.length>0?hs[hs.length-1].val+trend:reste;
+
+  var nextMonth=new Date();nextMonth.setMonth(nextMonth.getMonth()+1);
+  var nextLabel=nextMonth.toLocaleDateString('fr-CH',{month:'long'});
+
+  var card=document.createElement('div');
+  card.style.cssText='margin-top:10px;padding:12px 14px;border-radius:var(--r-sm);border:1.5px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px;';
+  var left=document.createElement('div');
+  left.innerHTML='<div style="font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--ink3);">Prédiction '+nextLabel+'</div>'
+    +'<div style="font-size:.75rem;color:var(--ink3);margin-top:2px;">Rev. '+fmt(rev)+' — Charges '+fmt(charges+facNP)+'</div>';
+  var right=document.createElement('div');
+  right.style.cssText='text-align:right;flex-shrink:0;';
+  right.innerHTML='<div style="font-family:var(--serif);font-size:1.4rem;font-weight:700;color:'+(pred>=0?'var(--sage)':'var(--red)')+';">'+fmt(pred)+'</div>'
+    +'<div style="font-size:.62rem;color:var(--ink3);">solde estimé</div>';
+  card.appendChild(left);card.appendChild(right);
+  cont.appendChild(card);
+}
+
 function renderBilanPerso(cont){
   var mf={daily:30,weekly:4.33,monthly:1,bimonthly:.5,quarterly:1/3,biannual:1/6,yearly:1/12};
+  var hs=calcHealthScore();
 
-  // Calculs personnels
-  var rev=S.incomes.filter(function(i){return i.scope==='personal';}).reduce(function(a,i){return a+(+i.amount||0);},0);
-  var facNP=S.factures.filter(function(f){return f.scope==='personal'&&!f.paid;}).reduce(function(a,f){return a+(+f.montant||0);},0);
-  var facP=S.factures.filter(function(f){return f.scope==='personal'&&f.paid;}).reduce(function(a,f){return a+(+f.montant||0);},0);
+  // ── SCORE CARD ──
+  var sc=document.createElement('div');
+  sc.style.cssText='background:var(--ink);border-radius:var(--r-lg);padding:20px;margin-bottom:14px;display:flex;align-items:center;gap:16px;';
+  // Grade circle
+  var grade=document.createElement('div');
+  grade.style.cssText='width:60px;height:60px;border-radius:50%;border:3px solid '+hs.color+';display:flex;align-items:center;justify-content:center;flex-shrink:0;';
+  grade.innerHTML='<span style="font-family:var(--serif);font-size:1.8rem;font-weight:800;color:'+hs.color+';">'+hs.grade+'</span>';
+  var info=document.createElement('div');info.style.flex='1';
+  var scoreBar='<div style="height:4px;background:rgba(255,255,255,.15);border-radius:2px;margin-top:8px;overflow:hidden;"><div style="width:'+hs.score+'%;height:100%;background:'+hs.color+';border-radius:2px;transition:width .6s;"></div></div>';
+  var desc=hs.score>=85?'Excellente santé financière':hs.score>=70?'Bonne situation':hs.score>=55?'Situation correcte':hs.score>=40?'Attention requise':'Situation critique';
+  info.innerHTML='<div style="font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:rgba(255,255,255,.5);">Score santé</div>'
+    +'<div style="font-size:.95rem;font-weight:700;color:#fff;margin-top:2px;">'+desc+'</div>'
+    +scoreBar;
+  sc.appendChild(grade);sc.appendChild(info);
+  cont.appendChild(sc);
+
+  // ── 4 CASES ──
+  var rev=hs.rev;
+  var facNP=hs.facNP;
   var charges=S.charges.filter(function(c){return c.scope==='personal';}).reduce(function(a,c){return a+(+c.montant||0)*(mf[c.freq]||1);},0);
   var bocaux=S.bocaux.filter(function(b){return b.scope!=='family';}).reduce(function(a,b){return a+(+b.actuel||0);},0);
-  var solde=rev-facP-bocaux;
-  var reste=solde-facNP-charges;
+  var solde=rev-hs.facNP-charges-bocaux;
 
-  // Capital card
-  var cc=mkEl('div',{className:'capital-card'});
-  cc.innerHTML='<div class="capital-tag">Capital personnel</div>'
-    +'<div class="capital-amount'+(solde<0?' neg':'')+'">'+fmt(solde)+'</div>'
-    +'<div class="capital-sub">Revenus moins depenses effectuees</div>'
-    +'<div class="capital-pills">'
-    +'<div class="cpill r">A payer: '+fmt(facNP+charges)+'</div>'
-    +'<div class="cpill '+(reste>=0?'g':'r')+'">Solde final: '+fmt(reste)+'</div>'
-    +'</div>';
-  cont.appendChild(cc);
-
-  // 4 categories cliquables
   function catCard(icon,label,val,color,action){
-    var el=mkEl('div',{className:'metric',style:'cursor:pointer;'});
-    el.innerHTML='<div style="font-size:1.4rem;margin-bottom:6px;">'+icon+'</div>'
-      +'<div class="metric-val" style="color:'+color+';">'+fmt(val)+'</div>'
+    var el=document.createElement('div');el.className='metric';el.style.cursor='pointer';
+    el.innerHTML='<div style="font-size:1.3rem;margin-bottom:5px;">'+icon+'</div>'
+      +'<div class="metric-val" style="color:'+color+';font-size:1.15rem;">'+fmt(val)+'</div>'
       +'<div class="metric-lbl">'+label+'</div>';
-    el.addEventListener('click',action);
-    return el;
+    el.addEventListener('click',action);return el;
   }
-
-  var grid=mkEl('div',{className:'metric-row'});
-  grid.style.gridTemplateColumns='1fr 1fr';
-  grid.appendChild(catCard('&#128184;','Revenus',rev,'var(--sage)',function(){switchTab('revenus',gid('nav-revenus'));}));
-  grid.appendChild(catCard('&#128203;','Factures',facNP,'var(--red)',function(){switchTab('factures',gid('nav-factures'));}));
+  var grid=document.createElement('div');grid.className='metric-row';grid.style.gridTemplateColumns='1fr 1fr';
+  grid.appendChild(catCard('💸','Revenus',rev,'var(--sage)',function(){switchTab('revenus',gid('nav-revenus'));}));
+  grid.appendChild(catCard('📋','Factures',facNP,'var(--red)',function(){switchTab('factures',gid('nav-factures'));}));
   cont.appendChild(grid);
-  var grid2=mkEl('div',{className:'metric-row'});
-  grid2.style.gridTemplateColumns='1fr 1fr';
-  grid2.appendChild(catCard('&#128257;','Charges/mois',charges,'var(--terra)',function(){switchTab('charges',gid('nav-charges'));}));
-  grid2.appendChild(catCard('&#129412;','Epargne',bocaux,'var(--blue)',function(){switchTab('epargne',gid('nav-epargne'));}));
+  var grid2=document.createElement('div');grid2.className='metric-row';grid2.style.gridTemplateColumns='1fr 1fr';
+  grid2.appendChild(catCard('🔄','Charges/mois',charges,'var(--terra)',function(){switchTab('charges',gid('nav-charges'));}));
+  grid2.appendChild(catCard('🐷','Épargne',bocaux,'var(--blue)',function(){switchTab('epargne',gid('nav-epargne'));}));
   cont.appendChild(grid2);
 
+  // ── GRAPHIQUE ──
+  var history=buildCapitalHistory();
+  renderCapitalGraph(cont, history, hs.color);
+
+  // ── PRÉDICTION ──
+  renderPrediction(cont, history);
+
   if(!rev&&!facNP&&!charges){
-    cont.innerHTML='<div class="empty-state"><div class="empty-emoji">&#127807;</div><div class="empty-msg">Tout est calme.<br>Appuyez sur + pour commencer.</div></div>';
+    cont.innerHTML='<div class="empty-state"><div class="empty-emoji">🌿</div><div class="empty-msg">Tout est calme.<br>Appuyez sur + pour commencer.</div></div>';
   }
 }
+
 
 function renderBilanFamille(cont){
   var mf={daily:30,weekly:4.33,monthly:1,bimonthly:.5,quarterly:1/3,biannual:1/6,yearly:1/12};
@@ -1201,7 +1315,7 @@ function doPrevMonth(){
 }
 
 
-function gSt(f){if(f.paid)return 'paid';var d=Math.ceil((new Date(f.echeance||'2099-01-01')-new Date())/86400000);return d<0?'overdue':d<=3?'soon':'ok';}
+function gSt(f){if(f.paid)return 'paid';var d=Math.ceil((new Date(f.echeance||'2099-01-01')-new Date())/86400000);return d<0?'overdue':d<=3?'soon':'ok';}}
 function pBadge(f){if(f.paid)return '<span class="f-badge fb-sage">Payee</span>';var s=gSt(f);if(s==='overdue')return '<span class="f-badge fb-red">En retard</span>';if(s==='soon')return '<span class="f-badge fb-terra">Bientot</span>';var r=f.rappel||0;var badges={1:'<span class="f-badge fb-red">Urgent</span>',3:'<span class="f-badge fb-gold">En cours</span>',4:'<span class="f-badge fb-grey">Plus tard</span>'};if(f.prio===2)return r>=2?'<span class="f-badge fb-red">2e rappel</span>':'<span class="f-badge fb-terra">Rappel</span>';return badges[f.prio]||'';}
 
 window.setPayTab=function(btn,tab){
@@ -1570,8 +1684,13 @@ function startCamStep1(){
       if(typeof jsQR==='undefined')return;
       var code=jsQR(img.data,img.width,img.height,{inversionAttempts:'dontInvert'});
       if(code){
-        // QR détecté — capturer automatiquement
-        capturePhotoStep1(code.data);
+        // QR détecté — feedback visuel puis capture
+        clearInterval(scanTick);
+        var frame=document.querySelector('.cam-frame');
+        if(frame)frame.style.borderColor='#5C7A5F';
+        var btn2=gid('btn-scan');
+        if(btn2)btn2.innerHTML='&#10003; QR détecté !';
+        setTimeout(function(){capturePhotoStep1(code.data);},400);
       }
     },300);
   }).catch(function(){toast('Camera non disponible — importez une image','e');});
@@ -1867,7 +1986,7 @@ window.openAddBocal=function(editId){
   }
   openSheet('sheet-add-bocal');
 };
-window.saveBocal=function(){var n=gid('boc-nom').value.trim(),o=parseFloat(gid('boc-obj').value)||0;if(!n||!o){toast('Remplissez les champs','e');return;}var eid=gid('boc-eid').value;var classeVal=gid('boc-classe')?gid('boc-classe').value||detectClasse(n):'';var d={id:eid||'b'+uid(),nom:n,objectif:o,actuel:parseFloat(gid('boc-actuel').value)||0,desir:parseInt(gid('boc-desir').value)||5,dateObj:gid('boc-date').value||null,scope:scopes.boc,classe:classeVal,transactions:editId?(S.bocaux.find(function(x){return x.id===editId;})||{}).transactions||[]:[]};;if(eid){var idx=S.bocaux.findIndex(function(x){return x.id===eid;});if(idx>-1)S.bocaux[idx]=d;}else S.bocaux.push(d);save();schedSync();closeSheet('sheet-add-bocal');toast(eid?'Bocal modifie':'Bocal cree');['boc-nom','boc-obj','boc-actuel','boc-date'].forEach(function(id){var e=gid(id);if(e)e.value='';});renderEpargne();renderBilan();};
+window.saveBocal=function(){var n=gid('boc-nom').value.trim(),o=parseFloat(gid('boc-obj').value)||0;if(!n||!o){toast('Remplissez les champs','e');return;}var eid=gid('boc-eid').value;var classeVal=gid('boc-classe')?gid('boc-classe').value||detectClasse(n):'';var d={id:eid||'b'+uid(),nom:n,objectif:o,actuel:parseFloat(gid('boc-actuel').value)||0,desir:parseInt(gid('boc-desir').value)||5,dateObj:gid('boc-date').value||null,scope:scopes.boc,classe:classeVal,transactions:eid?(S.bocaux.find(function(x){return x.id===eid;})||{}).transactions||[]:[]};if(eid){var idx=S.bocaux.findIndex(function(x){return x.id===eid;});if(idx>-1)S.bocaux[idx]=d;}else S.bocaux.push(d);save();schedSync();closeSheet('sheet-add-bocal');toast(eid?'Bocal modifie':'Bocal cree');['boc-nom','boc-obj','boc-actuel','boc-date'].forEach(function(id){var e=gid(id);if(e)e.value='';});renderEpargne();renderBilan();};
 window.deleteBocal=function(){var id=gid('boc-eid').value;if(!id)return;if(!confirm('Supprimer ?'))return;S.bocaux=S.bocaux.filter(function(x){return x.id!==id;});save();schedSync();closeSheet('sheet-add-bocal');renderEpargne();toast('Bocal supprime','e');};
 
 
@@ -2029,19 +2148,7 @@ window.saveProfile=function(){
   save();updateBar();closeSheet('sheet-profile');toast('Profil mis a jour');
 };
 
-window.onload=function(){
-  load();
-  gid('btn-login').addEventListener('click',doLogin);
-  document.querySelectorAll('.sheet-overlay').forEach(function(el){el.addEventListener('click',function(e){if(e.target===el)closeSheet(el.id);});});
-  var asOverlay=gid('as-pay');if(asOverlay)asOverlay.addEventListener('click',function(e){if(e.target===asOverlay)closeAS();});
-  var asBocOverlay=gid('as-boc');if(asBocOverlay)asBocOverlay.addEventListener('click',function(e){if(e.target===asBocOverlay)closeASBoc();});
-  document.getElementById('sheet-profile').addEventListener('click',function(e){if(e.target.id==='rm-token')removeToken();else if(e.target.id==='save-token-btn')saveToken();});
-  if(S.prenom){gid('screen-auth').classList.remove('active');gid('screen-main').classList.add('active');updateBar();renderBilan();if(GH_TOKEN&&S.familyId)pullFam(function(){renderBilan();});}
-};
-
-</script>
-</body>
-
+;
 
 // ══════════════════════════════════════════════════
 // COULEURS MEMBRES
@@ -2447,3 +2554,185 @@ function doPrevMonth(){
 
 
 window.openFacDetail=function(id){var f=S.factures.find(function(x){return x.id===id;});if(!f)return;curFacId=id;gid('df-title').textContent=f.nom;var h='';if(f.photo)h+='<img src="'+f.photo+'" class="fac-photo" alt=""/>';h+='<div class="metric-row"><div class="metric"><div class="metric-val">'+fmt(f.montant)+'</div><div class="metric-lbl">Montant</div></div><div class="metric"><div class="metric-val" style="font-size:1.1rem;">'+fmtD(f.echeance)+'</div><div class="metric-lbl">Echeance</div></div></div>';h+='<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;">'+pBadge(f);if(f.ref)h+='<span class="f-badge fb-grey">Ref: '+f.ref+'</span>';if(f.iban)h+='<span class="f-badge fb-grey">'+f.iban+'</span>';h+='<span class="f-badge '+(f.scope==='family'?'fb-sage':'fb-grey')+'">'+(f.scope==='family'?'Famille':'Personnel')+'</span></div>';if(f.photo)h+='<button class="dl-btn" id="dl-fac-btn" type="button">Telecharger / Partager</button>';h+='<div style="display:flex;flex-direction:column;gap:8px;" id="fac-actions"></div>';gid('df-body').innerHTML=h;if(f.photo){gid('dl-fac-btn').addEventListener('click',function(){downloadFac(id);});}var actions=gid('fac-actions');if(!f.paid){var pb=mkEl('button',{className:'btn btn-sage',type:'button',textContent:'Marquer comme payee'});pb.addEventListener('click',function(e){markPaid(id,e);});actions.appendChild(pb);}else{var ub=mkEl('button',{className:'btn btn-outline',type:'button',textContent:'Annuler le paiement'});ub.addEventListener('click',function(){markUnpaid(id);});actions.appendChild(ub);}var eb=mkEl('button',{className:'btn btn-outline',type:'button',textContent:'Modifier'});eb.addEventListener('click',function(){closeSheet('sheet-df');setTimeout(function(){openAddFac(curFacId);},320);});actions.appendChild(eb);openSheet('sheet-df');};
+
+
+window.openChargeAction=function(id){
+  var c=S.charges.find(function(x){return x.id===id;});
+  if(!c)return;
+  var thisM=S.currentMonth||new Date().toISOString().slice(0,7);
+  var isPaid=c.paidMonth===thisM;
+  var overlay=gid('as-pay');
+  var titleEl=gid('as-title');
+  var amountEl=gid('as-amount');
+  var btnPay=gid('as-btn-pay');
+  var btnDetail=gid('as-btn-detail');
+  if(!overlay)return;
+  titleEl.textContent=c.nom;
+  amountEl.textContent=fmt(c.montant)+' — '+(isPaid?'Deja payee ce mois':'Non payee');
+  btnPay.style.display=isPaid?'none':'block';
+  btnPay.textContent='Marquer comme payee';
+  btnDetail.style.display='block';
+  btnDetail.textContent='Voir / Modifier';
+  btnPay.onclick=function(){
+    closeAS();
+    c.paidMonth=thisM;save();schedSync();
+    payTab='done';
+    document.querySelectorAll('#page-paiement .pill-tab').forEach(function(b){b.classList.remove('active');});
+    var dt=gid('pay-tab-done');if(dt)dt.classList.add('active');
+    renderPaiement();
+    toast(c.nom+' marque comme paye');
+  };
+  btnDetail.onclick=function(){closeAS();openAddCharge(id);};
+  overlay.classList.add('open');
+};
+
+
+// ══════════════════════════════════════════════════
+// EXPORT PDF — rapport mensuel Aurora
+// ══════════════════════════════════════════════════
+window.exportPDF=function(){
+  var cm=S.currentMonth||new Date().toISOString().slice(0,7);
+  var mf={daily:30,weekly:4.33,monthly:1,bimonthly:.5,quarterly:1/3,biannual:1/6,yearly:1/12};
+  var hs=calcHealthScore();
+  var rev=S.incomes.reduce(function(a,i){return a+(+i.amount||0);},0);
+  var facPayees=S.factures.filter(function(f){return f.paid&&f.paidDate&&f.paidDate.slice(0,7)===cm;});
+  var facNP=S.factures.filter(function(f){return !f.paid;});
+  var charges=S.charges;
+  var totalCharges=charges.reduce(function(a,c){return a+(+c.montant||0)*(mf[c.freq]||1);},0);
+  var totalPayees=facPayees.reduce(function(a,f){return a+(+f.montant||0);},0);
+  var totalNP=facNP.reduce(function(a,f){return a+(+f.montant||0);},0);
+  var bocaux=S.bocaux;
+  var totalBoc=bocaux.reduce(function(a,b){return a+(+b.actuel||0);},0);
+
+  var dateStr=new Date().toLocaleDateString('fr-CH',{day:'2-digit',month:'long',year:'numeric'});
+  var monthStr=new Date(cm+'-01').toLocaleDateString('fr-CH',{month:'long',year:'numeric'});
+
+  var html='<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"/>'
+    +'<style>'
+    +'*{margin:0;padding:0;box-sizing:border-box;}'
+    +'body{font-family:Georgia,serif;color:#1a1a1a;background:#fff;padding:40px;max-width:800px;margin:0 auto;}'
+    +'.header{border-bottom:3px solid #1a1a1a;padding-bottom:20px;margin-bottom:30px;display:flex;justify-content:space-between;align-items:flex-end;}'
+    +'.logo{font-size:2rem;font-weight:900;letter-spacing:-.03em;}' 
+    +'.header-right{text-align:right;font-size:.8rem;color:#666;}'
+    +'.section{margin-bottom:28px;}'
+    +'.section-title{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.15em;color:#888;border-bottom:1px solid #eee;padding-bottom:6px;margin-bottom:14px;}'
+    +'.score-row{display:flex;align-items:center;gap:20px;padding:16px;background:#f8f8f5;border-radius:8px;}'
+    +'.grade{width:56px;height:56px;border-radius:50%;border:3px solid '+hs.color+';display:flex;align-items:center;justify-content:center;font-size:1.6rem;font-weight:900;color:'+hs.color+';flex-shrink:0;}'
+    +'.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}'
+    +'.metric{padding:14px;background:#f8f8f5;border-radius:8px;}'
+    +'.metric-val{font-size:1.2rem;font-weight:700;}'
+    +'.metric-lbl{font-size:.65rem;color:#888;text-transform:uppercase;letter-spacing:.08em;margin-top:3px;}'
+    +'table{width:100%;border-collapse:collapse;font-size:.85rem;}'
+    +'th{text-align:left;font-size:.6rem;text-transform:uppercase;letter-spacing:.1em;color:#888;padding:8px 10px;border-bottom:1px solid #eee;font-weight:600;}'
+    +'td{padding:8px 10px;border-bottom:1px solid #f0f0f0;}'
+    +'tr:last-child td{border-bottom:none;}'
+    +'.amount{text-align:right;font-weight:600;}'
+    +'.green{color:#2d6a4f;}.red{color:#c0392b;}.orange{color:#c4622d;}'
+    +'.total-row td{font-weight:700;border-top:2px solid #1a1a1a;padding-top:10px;}'
+    +'.footer{margin-top:40px;padding-top:16px;border-top:1px solid #eee;font-size:.7rem;color:#aaa;display:flex;justify-content:space-between;}'
+    +'@media print{body{padding:20px;}}'
+    +'</style></head><body>'
+    // En-tête
+    +'<div class="header"><div class="logo">Aurora</div>'
+    +'<div class="header-right"><div style="font-size:1.1rem;font-weight:700;">Rapport financier</div>'
+    +'<div>'+monthStr+'</div><div style="margin-top:4px;">'+S.prenom+'</div></div></div>'
+    // Score santé
+    +'<div class="section"><div class="section-title">Score de santé financière</div>'
+    +'<div class="score-row"><div class="grade">'+hs.grade+'</div>'
+    +'<div><div style="font-size:1.1rem;font-weight:700;">'+(hs.score>=85?'Excellente santé':hs.score>=70?'Bonne situation':hs.score>=55?'Situation correcte':hs.score>=40?'Attention requise':'Situation critique')+'</div>'
+    +'<div style="font-size:.8rem;color:#888;margin-top:4px;">Score : '+hs.score+'/100</div>'
+    +'<div style="height:6px;background:#eee;border-radius:3px;margin-top:8px;width:300px;"><div style="width:'+hs.score+'%;height:6px;background:'+hs.color+';border-radius:3px;"></div></div>'
+    +'</div></div></div>'
+    // Métriques clés
+    +'<div class="section"><div class="section-title">Vue d\'ensemble</div>'
+    +'<div class="metrics">'
+    +'<div class="metric"><div class="metric-val green">'+fmt(rev)+'</div><div class="metric-lbl">Revenus</div></div>'
+    +'<div class="metric"><div class="metric-val red">'+fmt(totalNP)+'</div><div class="metric-lbl">À payer</div></div>'
+    +'<div class="metric"><div class="metric-val orange">'+fmt(totalCharges)+'</div><div class="metric-lbl">Charges/mois</div></div>'
+    +'<div class="metric"><div class="metric-val" style="color:#3B6B8C;">'+fmt(totalBoc)+'</div><div class="metric-lbl">Épargne</div></div>'
+    +'</div></div>';
+
+  // Factures payées ce mois
+  if(facPayees.length){
+    html+='<div class="section"><div class="section-title">Factures réglées ce mois ('+facPayees.length+')</div>'
+      +'<table><tr><th>Créancier</th><th>Payé le</th><th class="amount">Montant</th></tr>';
+    facPayees.forEach(function(f){
+      html+='<tr><td>'+f.nom+'</td><td>'+fmtD(f.paidDate)+'</td><td class="amount green">'+fmt(f.montant)+'</td></tr>';
+    });
+    html+='<tr class="total-row"><td colspan="2">Total réglé</td><td class="amount green">'+fmt(totalPayees)+'</td></tr>';
+    html+='</table></div>';
+  }
+
+  // Factures restantes
+  if(facNP.length){
+    html+='<div class="section"><div class="section-title">Factures en attente ('+facNP.length+')</div>'
+      +'<table><tr><th>Facture</th><th>Échéance</th><th>Priorité</th><th class="amount">Montant</th></tr>';
+    var prioLabels={1:'Urgent',2:'Rappel',3:'En cours',4:'Plus tard'};
+    var prioColors={1:'red',2:'orange',3:'','4':''};
+    facNP.sort(function(a,b){return a.prio-b.prio;}).forEach(function(f){
+      html+='<tr><td>'+f.nom+'</td><td>'+fmtD(f.echeance)+'</td>'
+        +'<td class="'+(prioColors[f.prio]||'')+'">'+( prioLabels[f.prio]||'')+'</td>'
+        +'<td class="amount red">'+fmt(f.montant)+'</td></tr>';
+    });
+    html+='<tr class="total-row"><td colspan="3">Total à payer</td><td class="amount red">'+fmt(totalNP)+'</td></tr>';
+    html+='</table></div>';
+  }
+
+  // Charges fixes
+  if(charges.length){
+    html+='<div class="section"><div class="section-title">Charges fixes mensuelles</div>'
+      +'<table><tr><th>Charge</th><th>Fréquence</th><th>Scope</th><th class="amount">Mensuel</th></tr>';
+    var fl={daily:'Quotidienne',weekly:'Hebdomadaire',monthly:'Mensuelle',bimonthly:'2 mois',quarterly:'Trimestrielle',biannual:'6 mois',yearly:'Annuelle'};
+    charges.forEach(function(c){
+      html+='<tr><td>'+c.nom+'</td><td>'+(fl[c.freq]||c.freq)+'</td><td>'+(c.scope==='family'?'Famille':'Personnel')+'</td>'
+        +'<td class="amount">'+fmt(c.montant*(mf[c.freq]||1))+'</td></tr>';
+    });
+    html+='<tr class="total-row"><td colspan="3">Total mensuel</td><td class="amount">'+fmt(totalCharges)+'</td></tr>';
+    html+='</table></div>';
+  }
+
+  // Épargne
+  if(bocaux.length){
+    html+='<div class="section"><div class="section-title">Bocaux d\'épargne</div>'
+      +'<table><tr><th>Objectif</th><th>Classe</th><th>Progression</th><th class="amount">Épargné / Objectif</th></tr>';
+    bocaux.forEach(function(b){
+      var pct=Math.min(100,Math.round(b.actuel/Math.max(1,b.objectif)*100));
+      html+='<tr><td>'+b.nom+'</td><td>'+(b.classe||'—')+'</td>'
+        +'<td><div style="height:4px;background:#eee;border-radius:2px;width:100px;display:inline-block;"><div style="width:'+pct+'%;height:4px;background:#2d6a4f;border-radius:2px;"></div></div> '+pct+'%</td>'
+        +'<td class="amount">'+fmt(b.actuel)+' / '+fmt(b.objectif)+'</td></tr>';
+    });
+    html+='<tr class="total-row"><td colspan="3">Total épargné</td><td class="amount" style="color:#3B6B8C;">'+fmt(totalBoc)+'</td></tr>';
+    html+='</table></div>';
+  }
+
+  html+='<div class="footer"><div>Aurora Budget — Rapport généré le '+dateStr+'</div><div>Confidentiel</div></div>'
+    +'</body></html>';
+
+  // Ouvrir dans nouvel onglet pour impression/téléchargement
+  var win=window.open('','_blank');
+  if(win){
+    win.document.write(html);
+    win.document.close();
+    setTimeout(function(){win.print();},500);
+  } else {
+    // Fallback: blob download
+    var blob=new Blob([html],{type:'text/html'});
+    var url=URL.createObjectURL(blob);
+    var a=document.createElement('a');
+    a.href=url;a.download='aurora-rapport-'+cm+'.html';
+    a.click();URL.revokeObjectURL(url);
+    toast('Rapport téléchargé');
+  }
+};
+
+window.onload=function(){
+  load();
+  gid('btn-login').addEventListener('click',doLogin);
+  document.querySelectorAll('.sheet-overlay').forEach(function(el){el.addEventListener('click',function(e){if(e.target===el)closeSheet(el.id);});});
+  var asOverlay=gid('as-pay');if(asOverlay)asOverlay.addEventListener('click',function(e){if(e.target===asOverlay)closeAS();});
+  var asBocOverlay=gid('as-boc');if(asBocOverlay)asBocOverlay.addEventListener('click',function(e){if(e.target===asBocOverlay)closeASBoc();});
+  document.getElementById('sheet-profile').addEventListener('click',function(e){if(e.target.id==='rm-token')removeToken();else if(e.target.id==='save-token-btn')saveToken();});
+  if(S.prenom){gid('screen-auth').classList.remove('active');gid('screen-main').classList.add('active');updateBar();renderBilan();if(GH_TOKEN&&S.familyId)pullFam(function(){renderBilan();});}
+}
+</script>
+</body>
