@@ -1513,53 +1513,45 @@ function capturePhotoStep1(qrData){
 
 function handleFileStep1(e){
   var file=e.target.files[0];if(!file)return;
-  // Feedback visuel immédiat
-  var btn=document.querySelector('#fac-sheet-body label');
-  if(btn)btn.innerHTML='Analyse en cours...';
   var reader=new FileReader();
   reader.onload=function(ev){
     if(!file.type.startsWith('image/')){
       currentPhoto=null;
-      stopCams();renderFacStep2(null,null);
+      renderFacStep2(null,null);
       return;
     }
     var img=new Image();
     img.onload=function(){
-      // Redimensionner pour le scan QR (max 1024px)
-      var maxQR=1024;
-      var scaleQR=Math.min(1,maxQR/Math.max(img.width,img.height));
-      var qwQR=Math.round(img.width*scaleQR);
-      var qhQR=Math.round(img.height*scaleQR);
-      var cvQR=document.createElement('canvas');cvQR.width=qwQR;cvQR.height=qhQR;
-      cvQR.getContext('2d').drawImage(img,0,0,qwQR,qhQR);
+      // 1. Compresser la photo (max 900px) pour stocker
+      var MAX=900;
+      var scale=Math.min(1,MAX/Math.max(img.width||1,img.height||1));
+      var cw=Math.round((img.width||MAX)*scale);
+      var ch=Math.round((img.height||MAX)*scale);
+      var cv=document.createElement('canvas');
+      cv.width=cw;cv.height=ch;
+      cv.getContext('2d').drawImage(img,0,0,cw,ch);
+      currentPhoto=cv.toDataURL('image/jpeg',0.72);
+
+      // 2. Tenter QR sur version encore plus petite (max 600px)
       var qrData=null;
-      if(typeof jsQR!=='undefined'){
-        try{
-          var d=cvQR.getContext('2d').getImageData(0,0,qwQR,qhQR);
-          var code=jsQR(d.data,d.width,d.height,{inversionAttempts:'dontInvert'});
-          if(code)qrData=code.data;
-        }catch(e){}
-      }
-      // Compresser la photo stockée (max 1200px, qualité 0.75)
-      var maxPH=1200;
-      var scalePH=Math.min(1,maxPH/Math.max(img.width,img.height));
-      var pwPH=Math.round(img.width*scalePH);
-      var phPH=Math.round(img.height*scalePH);
-      var cvPH=document.createElement('canvas');cvPH.width=pwPH;cvPH.height=phPH;
-      cvPH.getContext('2d').drawImage(img,0,0,pwPH,phPH);
-      currentPhoto=cvPH.toDataURL('image/jpeg',0.75);
-      stopCams();
+      try{
+        if(typeof jsQR!=='undefined'){
+          var QS=Math.min(1,600/Math.max(cw,ch));
+          var qw=Math.round(cw*QS),qh=Math.round(ch*QS);
+          var cq=document.createElement('canvas');cq.width=qw;cq.height=qh;
+          cq.getContext('2d').drawImage(cv,0,0,qw,qh);
+          var px=cq.getContext('2d').getImageData(0,0,qw,qh);
+          var res=jsQR(px.data,qw,qh,{inversionAttempts:'dontInvert'});
+          if(res)qrData=res.data;
+        }
+      }catch(err){}
+
       renderFacStep2(null, qrData?parseQRData(qrData):null);
     };
-    img.onerror=function(){
-      currentPhoto=null;stopCams();renderFacStep2(null,null);
-    };
+    img.onerror=function(){currentPhoto=null;renderFacStep2(null,null);};
     img.src=ev.target.result;
   };
-  reader.onerror=function(){
-    currentPhoto=null;stopCams();renderFacStep2(null,null);
-    toast('Erreur lecture fichier','e');
-  };
+  reader.onerror=function(){currentPhoto=null;renderFacStep2(null,null);};
   reader.readAsDataURL(file);
 }
 
