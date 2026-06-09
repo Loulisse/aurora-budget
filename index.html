@@ -2411,34 +2411,36 @@ function doPrevMonth(){
 }
 
 
-window.openFacDetail=function(id){var f=S.factures.find(function(x){return x.id===id;});if(!f)return;curFacId=id;gid('df-title').textContent=f.nom;var h='';if(f.photo)h+='<div id="fac-photo-wrap"><div style="text-align:center;padding:20px;color:var(--ink3);font-size:.8rem;">Chargement photo...</div></div>';h+='<div class="metric-row"><div class="metric"><div class="metric-val">'+fmt(f.montant)+'</div><div class="metric-lbl">Montant</div></div><div class="metric"><div class="metric-val" style="font-size:1.1rem;">'+fmtD(f.echeance)+'</div><div class="metric-lbl">Echeance</div></div></div>';h+='<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;">'+pBadge(f);if(f.ref)h+='<span class="f-badge fb-grey">Ref: '+f.ref+'</span>';if(f.iban)h+='<span class="f-badge fb-grey">'+f.iban+'</span>';h+='<span class="f-badge '+(f.scope==='family'?'fb-sage':'fb-grey')+'">'+(f.scope==='family'?'Famille':'Personnel')+'</span></div>';if(f.photo)h+='<button class="dl-btn" id="dl-fac-btn" type="button">Telecharger / Partager</button>';h+='<div style="display:flex;flex-direction:column;gap:8px;" id="fac-actions"></div>';gid('df-body').innerHTML=h;
+window.openFacDetail=function(id){var f=S.factures.find(function(x){return x.id===id;});if(!f)return;curFacId=id;gid('df-title').textContent=f.nom;var h='';if(f.photo)h+='<div id="fac-photo-wrap" style="margin-bottom:10px;"></div>';h+='<div class="metric-row"><div class="metric"><div class="metric-val">'+fmt(f.montant)+'</div><div class="metric-lbl">Montant</div></div><div class="metric"><div class="metric-val" style="font-size:1.1rem;">'+fmtD(f.echeance)+'</div><div class="metric-lbl">Echeance</div></div></div>';h+='<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;">'+pBadge(f);if(f.ref)h+='<span class="f-badge fb-grey">Ref: '+f.ref+'</span>';if(f.iban)h+='<span class="f-badge fb-grey">'+f.iban+'</span>';h+='<span class="f-badge '+(f.scope==='family'?'fb-sage':'fb-grey')+'">'+(f.scope==='family'?'Famille':'Personnel')+'</span></div>';if(f.photo)h+='<button class="dl-btn" id="dl-fac-btn" type="button">Telecharger / Partager</button>';h+='<div style="display:flex;flex-direction:column;gap:8px;" id="fac-actions"></div>';gid('df-body').innerHTML=h;
   // Charger la photo via API GitHub pour éviter les problèmes CORS
-  if(f.photo&&GH_TOKEN){
-    var photoFilename=f.photo.split('/photos/')[1];
-    if(photoFilename){
-      var photoApi='https://api.github.com/repos/'+GH_OWNER+'/'+GH_REPO+'/contents/photos/'+photoFilename;
-      fetch(photoApi,{headers:ghH()})
-        .then(function(r){return r.ok?r.json():null;})
-        .then(function(j){
-          var wrap=document.getElementById('fac-photo-wrap');
-          if(!wrap)return;
-          if(j&&j.content){
-            var ext=photoFilename.split('.').pop().toLowerCase();
-            var mime=ext==='jpg'||ext==='jpeg'?'image/jpeg':'image/png';
-            var src='data:'+mime+';base64,'+j.content.replace(/\n/g,'');
-            wrap.innerHTML='<img src="'+src+'" class="fac-photo" alt="Facture"/>';
-          } else {
-            wrap.innerHTML='';
-          }
-        }).catch(function(){
-          var wrap=document.getElementById('fac-photo-wrap');
-          if(wrap)wrap.innerHTML='';
-        });
-    }
-  } else if(f.photo){
-    // URL directe (fallback)
+  if(f.photo){
     var wrap=document.getElementById('fac-photo-wrap');
-    if(wrap)wrap.innerHTML='<img src="'+f.photo+'" class="fac-photo" alt="Facture" onerror="this.parentNode.innerHTML=\'\'" />';
+    if(!wrap){wrap=document.createElement('div');wrap.id='fac-photo-wrap';gid('df-body').prepend(wrap);}
+    // Cas 1: base64 direct (anciennes factures)
+    if(f.photo.indexOf('data:')===0){
+      wrap.innerHTML='<img src="'+f.photo+'" class="fac-photo" alt="Facture" onclick="openPhotoFS(this.src)" style="cursor:zoom-in;"/>';
+    }
+    // Cas 2: URL GitHub → charger via API
+    else if(f.photo.indexOf('github')>-1||f.photo.indexOf('jsdelivr')>-1){
+      wrap.innerHTML='<div style="text-align:center;padding:14px;color:var(--ink3);font-size:.78rem;">Chargement...</div>';
+      var photoFilename=f.photo.split('/photos/').pop().split('?')[0];
+      if(photoFilename&&GH_TOKEN){
+        var photoApi='https://api.github.com/repos/'+GH_OWNER+'/'+GH_REPO+'/contents/photos/'+photoFilename;
+        fetch(photoApi,{headers:ghH()})
+          .then(function(r){return r.ok?r.json():null;})
+          .then(function(j){
+            if(!wrap.parentNode)return;
+            if(j&&j.content){
+              var src='data:image/jpeg;base64,'+j.content.replace(/[\n\r]/g,'');
+              wrap.innerHTML='<img src="'+src+'" class="fac-photo" alt="Facture" onclick="openPhotoFS(this.src)" style="cursor:zoom-in;"/>';
+            } else {wrap.innerHTML='';}
+          }).catch(function(){if(wrap.parentNode)wrap.innerHTML='';});
+      } else {wrap.innerHTML='';}
+    }
+    // Cas 3: URL quelconque
+    else {
+      wrap.innerHTML='<img src="'+f.photo+'" class="fac-photo" alt="Facture" onclick="openPhotoFS(this.src)" style="cursor:zoom-in;" onerror="this.parentNode.innerHTML=\'\'" />';
+    }
   }if(f.photo){gid('dl-fac-btn').addEventListener('click',function(){downloadFac(id);});}var actions=gid('fac-actions');if(!f.paid){var pb=mkEl('button',{className:'btn btn-sage',type:'button',textContent:'Marquer comme payee'});pb.addEventListener('click',function(e){markPaid(id,e);});actions.appendChild(pb);}else{var ub=mkEl('button',{className:'btn btn-outline',type:'button',textContent:'Annuler le paiement'});ub.addEventListener('click',function(){markUnpaid(id);});actions.appendChild(ub);}var eb=mkEl('button',{className:'btn btn-outline',type:'button',textContent:'Modifier'});eb.addEventListener('click',function(){closeSheet('sheet-df');setTimeout(function(){openAddFac(curFacId);},320);});actions.appendChild(eb);var db=mkEl('button',{className:'btn btn-outline',type:'button',textContent:'Dupliquer'});db.addEventListener('click',function(){closeSheet('sheet-df');duplicateFac(id);});actions.appendChild(db);openSheet('sheet-df');};
 
 
@@ -2734,6 +2736,15 @@ function uploadPhotoGH(dataUrl, filename, cb){
     .catch(function(){cb(null);});
 }
 
+
+window.openPhotoFS=function(src){
+  var ov=document.createElement('div');
+  ov.style.cssText='position:fixed;inset:0;z-index:1000;background:#000;display:flex;align-items:center;justify-content:center;cursor:zoom-out;';
+  ov.innerHTML='<img src="'+src+'" style="max-width:100%;max-height:100dvh;object-fit:contain;"/>'
+    +'<button type="button" style="position:absolute;top:calc(env(safe-area-inset-top,44px)+10px);right:16px;background:rgba(255,255,255,.15);border:none;color:#fff;width:36px;height:36px;border-radius:50%;font-size:1.1rem;cursor:pointer;">x</button>';
+  ov.addEventListener('click',function(){document.body.removeChild(ov);});
+  document.body.appendChild(ov);
+};
 window.onload=function(){
   load();
   gid('btn-login').addEventListener('click',doLogin);
