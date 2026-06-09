@@ -453,9 +453,11 @@ html,body{height:100%;background:var(--ivory);color:var(--ink);font-family:var(-
       <div class="f-group"><label class="f-label">Nom</label><input class="f-input" type="text" id="ch-nom" placeholder="Loyer, Netflix..."/></div>
       <div class="f-group"><label class="f-label">Montant (CHF)</label><input class="f-input" type="number" id="ch-montant" placeholder="0.00" inputmode="decimal"/></div>
       <div class="f-group"><label class="f-label">Frequence</label>
-        <select class="f-select" id="ch-freq"><option value="daily">Chaque jour</option><option value="weekly">Chaque semaine</option><option value="monthly">Chaque mois</option><option value="bimonthly">Tous les 2 mois</option><option value="quarterly">Tous les 3 mois</option><option value="biannual">Tous les 6 mois</option><option value="yearly">Tous les ans</option></select></div>
+        <select class="f-select" id="ch-freq" onchange="toggleChEcheance(this.value)"><option value="daily">Chaque jour</option><option value="weekly">Chaque semaine</option><option value="monthly">Chaque mois</option><option value="bimonthly">Tous les 2 mois</option><option value="quarterly">Tous les 3 mois</option><option value="biannual">Tous les 6 mois</option><option value="yearly">Tous les ans</option></select></div>
       <div class="f-group"><label class="f-label">Categorie</label>
         <select class="f-select" id="ch-cat"><option>Loyer / Charges</option><option>Credit / Leasing</option><option>Assurance</option><option>Telecom</option><option>Energie</option><option>Loisirs</option><option>Transport</option><option>Sante</option><option>Autre</option></select></div>
+      <div class="f-group" id="ch-echeance-group" style="display:none;"><label class="f-label">Date de paiement prévue</label>
+        <input class="f-input" type="date" id="ch-echeance"/></div>
       <div class="f-group"><label class="f-label">Visibilite</label>
         <div class="scope-toggle"><button class="scope-btn ap" id="ch-sp" onclick="setScope('ch','personal')" type="button">Personnel</button><button class="scope-btn" id="ch-sf" onclick="setScope('ch','family')" type="button">Famille</button></div></div>
 
@@ -1818,45 +1820,326 @@ window.deleteFacForm=function(){var id=gid('fac-eid').value;if(!id)return;if(!co
 window.openChargeAction=function(id){
   var c=S.charges.find(function(x){return x.id===id;});
   if(!c)return;
+  var isProvision=['bimonthly','quarterly','biannual','yearly'].indexOf(c.freq)>-1;
+  if(isProvision){openProvisionAction(c);return;}
   var thisM=S.currentMonth||new Date().toISOString().slice(0,7);
   var isPaid=c.paidMonth===thisM;
-  var sheet=gid('sheet-charge-action');
   var body=gid('charge-action-body');
   body.innerHTML='';
-  var title=mkEl('div',{style:'font-weight:700;font-size:1rem;margin-bottom:16px;'});
-  title.textContent=c.nom+' — '+fmt(c.montant);
-  body.appendChild(title);
+  var title=mkEl('div',{style:'font-weight:700;font-size:1rem;margin-bottom:4px;'});
+  title.textContent=c.nom;
+  var sub=mkEl('div',{style:'font-size:.78rem;color:var(--ink3);margin-bottom:16px;'});
+  sub.textContent=fmt(c.montant)+' · '+(isPaid?'Payee ce mois':'Non payee');
+  body.appendChild(title);body.appendChild(sub);
   if(!isPaid){
     var btnPay=mkEl('button',{className:'btn btn-sage',type:'button',textContent:'Marquer comme payee ce mois'});
     btnPay.addEventListener('click',function(){
-      try{
-        c.paidMonth=thisM;save();schedSync();
-        closeSheet('sheet-charge-action');
-        payTab='done';
-        document.querySelectorAll('#page-paiement .pill-tab').forEach(function(b){b.classList.remove('active');});
-        var doneTab=gid('pay-tab-done');if(doneTab)doneTab.classList.add('active');
-        renderPaiement();
-        toast(c.nom+' marque comme paye');
-      }catch(err){alert('Erreur charge: '+err.message);}
+      c.paidMonth=thisM;save();schedSync();
+      closeSheet('sheet-charge-action');
+      payTab='done';
+      document.querySelectorAll('#page-paiement .pill-tab').forEach(function(b){b.classList.remove('active');});
+      var doneTab=gid('pay-tab-done');if(doneTab)doneTab.classList.add('active');
+      renderPaiement();toast(c.nom+' marque comme paye');
     });
     body.appendChild(btnPay);
   } else {
     var btnUnpay=mkEl('button',{className:'btn btn-outline',type:'button',textContent:'Annuler — pas encore paye'});
     btnUnpay.addEventListener('click',function(){
       c.paidMonth=null;save();schedSync();
-      closeSheet('sheet-charge-action');
-      renderPaiement();
-      toast('Annule');
+      closeSheet('sheet-charge-action');renderPaiement();toast('Annule');
     });
     body.appendChild(btnUnpay);
   }
-  var btnEdit=mkEl('button',{className:'btn btn-outline',type:'button',textContent:'Voir / Modifier le detail',style:'margin-top:8px;'});
+  var btnEdit=mkEl('button',{className:'btn btn-outline',type:'button',textContent:'Voir / Modifier',style:'margin-top:8px;'});
   btnEdit.addEventListener('click',function(){closeSheet('sheet-charge-action');openAddCharge(id);});
   body.appendChild(btnEdit);
   openSheet('sheet-charge-action');
 };
-window.openAddCharge=function(editId){var c=editId?S.charges.find(function(x){return x.id===editId;}):null;gid('ch-title').textContent=c?'Modifier':'Charge fixe';gid('ch-eid').value=editId||'';gid('ch-del').style.display=c?'':'none';gid('ch-nom').value=c?c.nom:'';gid('ch-montant').value=c?c.montant:'';gid('ch-freq').value=c?c.freq:'monthly';gid('ch-cat').value=c?c.cat:'Loyer / Charges';setScope('ch',c?c.scope:'personal');openSheet('sheet-add-charge');};
-window.saveCharge=function(){var n=gid('ch-nom').value.trim(),m=parseFloat(gid('ch-montant').value)||0;if(!n||!m){toast('Remplissez les champs','e');return;}var eid=gid('ch-eid').value;var payeur='';var d={id:eid||'c'+uid(),nom:n,montant:m,freq:gid('ch-freq').value,cat:gid('ch-cat').value,scope:scopes.ch,payeur:payeur||null};if(eid){var idx=S.charges.findIndex(function(x){return x.id===eid;});if(idx>-1)S.charges[idx]=d;}else S.charges.push(d);save();schedSync();closeSheet('sheet-add-charge');toast(eid?'Charge modifiee':'Charge ajoutee');gid('ch-nom').value='';gid('ch-montant').value='';renderCharges();renderBilan();renderPaiement();};
+
+function calcProvisionMensualite(c){
+  // Calcule la mensualité idéale selon le restant et le temps
+  var mf={bimonthly:2,quarterly:3,biannual:6,yearly:12};
+  var totalMois=mf[c.freq]||12;
+  var provisions=c.provisions||[];
+  var totalMis=provisions.reduce(function(a,p){return a+(+p.amount||0);},0);
+  var restant=Math.max(0,c.montant-totalMis);
+  // Mois restants: basé sur le mois courant dans le cycle
+  var now=new Date();
+  var moisEcoules=provisions.length; // simplifié: nb de fois où on a mis de côté
+  var moisRestants=Math.max(1,totalMois-moisEcoules);
+  var mensualite=restant/moisRestants;
+  return {mensualite:mensualite,totalMis:totalMis,restant:restant,moisRestants:moisRestants,totalMois:totalMois,pct:Math.min(100,Math.round(totalMis/c.montant*100))};
+}
+
+function openProvisionAction(c){
+  var info=calcProvisionMensualite(c);
+  var thisM=S.currentMonth||new Date().toISOString().slice(0,7);
+  var dejaVerse=( c.provisions||[]).find(function(p){return p.month===thisM&&p.amount>0;});
+  var fl={bimonthly:'2 mois',quarterly:'3 mois',biannual:'6 mois',yearly:'an'};
+  var body=gid('charge-action-body');
+  body.innerHTML='';
+
+  // En-tête
+  var hd=document.createElement('div');
+  hd.style.cssText='margin-bottom:14px;';
+  hd.innerHTML='<div style="font-weight:700;font-size:1.05rem;">'+c.nom+'</div>'
+    +'<div style="font-size:.72rem;color:var(--ink3);margin-top:2px;">Facture tous les '+(fl[c.freq]||'')+' — objectif '+fmt(c.montant)+(c.echeance?' · Echeance: '+fmtD(c.echeance):'')+'</div>';
+  body.appendChild(hd);
+
+  // Barre de progression
+  var prog=document.createElement('div');
+  prog.style.cssText='margin-bottom:16px;padding:14px;background:var(--ivory2);border-radius:var(--r-sm);';
+  prog.innerHTML='<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;">'
+    +'<div>'
+    +'<div style="font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--ink3);">Mis de côté</div>'
+    +'<div style="font-family:var(--serif);font-size:1.6rem;color:var(--sage);">'+fmt(info.totalMis)+'</div>'
+    +'</div>'
+    +'<div style="text-align:right;">'
+    +'<div style="font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--ink3);">Objectif</div>'
+    +'<div style="font-family:var(--serif);font-size:1.6rem;color:var(--ink);">'+fmt(c.montant)+'</div>'
+    +'</div></div>'
+    +'<div style="height:8px;background:var(--ivory3);border-radius:4px;overflow:hidden;margin-bottom:8px;">'
+    +'<div style="width:'+info.pct+'%;height:100%;background:'+(info.pct>=100?'var(--sage)':'var(--gold)')+';border-radius:4px;transition:width .4s;"></div></div>'
+    +'<div style="display:flex;justify-content:space-between;font-size:.68rem;color:var(--ink3);">'
+    +'<span>'+info.pct+'% atteint</span>'
+    +'<span>'+info.moisRestants+' mois restant'+(info.moisRestants>1?'s':'')+'</span>'
+    +'</div>';
+  body.appendChild(prog);
+
+  // Mensualité idéale dynamique
+  var suggCard=document.createElement('div');
+  suggCard.style.cssText='padding:12px 14px;background:'+(info.totalMis===0?'var(--red-l)':info.moisRestants<=1?'var(--terra-l)':'var(--gold-l)')+';border-radius:var(--r-sm);margin-bottom:14px;';
+  var urgMsg=info.totalMis===0&&info.moisRestants<=1
+    ? 'La facture est imminente — paiement complet requis'
+    : info.totalMis===0
+    ? 'Rien mis de cote — '+info.totalMois+' mois pour atteindre objectif'
+    : 'Reste '+fmt(info.restant)+' à couvrir en '+info.moisRestants+' mois';
+  suggCard.innerHTML='<div style="font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--ink3);margin-bottom:4px;">À mettre de côté ce mois</div>'
+    +'<div style="font-family:var(--serif);font-size:1.8rem;font-weight:700;color:var(--ink);">'+fmt(info.mensualite)+'</div>'
+    +'<div style="font-size:.68rem;color:var(--ink3);margin-top:3px;">'+urgMsg+'</div>';
+  body.appendChild(suggCard);
+
+  // Bouton mettre de côté
+  if(!dejaVerse){
+    var amtInput=document.createElement('div');
+    amtInput.className='f-group';amtInput.style.marginBottom='10px';
+    amtInput.innerHTML='<label class="f-label">Montant à mettre de côté (CHF)</label>'
+      +'<input class="f-input" id="prov-aside-amt" type="number" inputmode="decimal" step="0.01" value="'+info.mensualite.toFixed(2)+'"/>';
+    body.appendChild(amtInput);
+
+    var btnProv=document.createElement('button');
+    btnProv.className='btn btn-ink';btnProv.type='button';
+    btnProv.textContent='Mettre de côté ce mois';
+    btnProv.addEventListener('click',function(){
+      var amt=parseFloat((gid('prov-aside-amt')||{value:info.mensualite}).value)||info.mensualite;
+      if(!c.provisions)c.provisions=[];
+      c.provisions.push({month:thisM,amount:amt,date:today()});
+      c.paidMonth=thisM;
+      save();schedSync();
+      closeSheet('sheet-charge-action');
+      payTab='done';
+      document.querySelectorAll('#page-paiement .pill-tab').forEach(function(b){b.classList.remove('active');});
+      var dt=gid('pay-tab-done');if(dt)dt.classList.add('active');
+      renderPaiement();
+      toast('+'+fmt(amt)+' mis de côté — '+c.nom);
+    });
+    body.appendChild(btnProv);
+  } else {
+    var alreadyDiv=document.createElement('div');
+    alreadyDiv.style.cssText='background:var(--sage-l);color:var(--sage);padding:10px 14px;border-radius:var(--r-sm);font-size:.8rem;font-weight:600;margin-bottom:10px;';
+    alreadyDiv.textContent='✓ '+fmt(dejaVerse.amount)+' mis de côté ce mois';
+    body.appendChild(alreadyDiv);
+  }
+
+  // Bouton payer la facture
+  var btnPay=document.createElement('button');
+  btnPay.className='btn btn-sage';btnPay.type='button';
+  btnPay.style.marginTop='8px';
+  btnPay.textContent='Payer la facture ('+fmt(c.montant)+')';
+  btnPay.addEventListener('click',function(){
+    closeSheet('sheet-charge-action');
+    openProvisionPayModal(c);
+  });
+  body.appendChild(btnPay);
+
+  // Bouton voir détail
+  var btnEdit=document.createElement('button');
+  btnEdit.className='btn btn-outline';btnEdit.type='button';
+  btnEdit.style.marginTop='8px';btnEdit.textContent='Voir le détail & graphique';
+  btnEdit.addEventListener('click',function(){closeSheet('sheet-charge-action');openProvisionDetail(c.id);});
+  body.appendChild(btnEdit);
+
+  openSheet('sheet-charge-action');
+}
+
+
+function openProvisionPayModal(c){
+  var overlay=document.createElement('div');
+  overlay.style.cssText='position:fixed;inset:0;z-index:400;background:rgba(28,27,24,.55);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:flex;align-items:flex-end;';
+  var sheet=document.createElement('div');
+  sheet.style.cssText='width:100%;background:var(--ivory);border-radius:24px 24px 0 0;padding:20px 18px calc(env(safe-area-inset-bottom,34px)+16px);';
+  var totalMis=(c.provisions||[]).reduce(function(a,p){return a+(+p.amount||0);},0);
+  sheet.innerHTML='<div style="font-family:var(--serif);font-size:1.2rem;margin-bottom:4px;">Payer — '+c.nom+'</div>'
+    +'<div style="font-size:.75rem;color:var(--ink3);margin-bottom:16px;">Mis de cote: '+fmt(totalMis)+(c.echeance?' · Echeance: '+fmtD(c.echeance):'')+'</div>'
+    +'<div class="f-group"><label class="f-label">Montant paye (CHF)</label>'
+    +'<input class="f-input" id="prov-pay-amt" type="number" inputmode="decimal" step="0.01" value="'+c.montant+'"/></div>'
+    +'<div class="f-group"><label class="f-label">Joindre une photo de facture (optionnel)</label>'
+    +'<label class="btn btn-outline" style="cursor:pointer;font-size:.82rem;padding:10px;">'
+    +'&#128247; Photographier / Importer'
+    +'<input type="file" accept="image/*" id="prov-photo-inp" style="display:none;"/>'
+    +'</label>'
+    +'<div id="prov-photo-preview" style="margin-top:8px;"></div></div>';
+  function dismiss(){if(overlay.parentNode)document.body.removeChild(overlay);}
+
+  // Gestion photo
+  setTimeout(function(){
+    var photoInp=document.getElementById('prov-photo-inp');
+    if(photoInp){
+      photoInp.addEventListener('change',function(e){
+        var file=e.target.files[0];if(!file)return;
+        var reader=new FileReader();
+        reader.onload=function(ev){
+          var img=new Image();
+          img.onload=function(){
+            var MAX=900,scale=Math.min(1,MAX/Math.max(img.width||1,img.height||1));
+            var cv=document.createElement('canvas');
+            cv.width=Math.round(img.width*scale);cv.height=Math.round(img.height*scale);
+            cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);
+            window._provPhoto=cv.toDataURL('image/jpeg',0.75);
+            var prev=document.getElementById('prov-photo-preview');
+            if(prev)prev.innerHTML='<img src="'+window._provPhoto+'" style="width:100%;border-radius:8px;max-height:120px;object-fit:cover;"/>';
+          };
+          img.src=ev.target.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+  },200);
+
+  var btnOk=document.createElement('button');btnOk.type='button';btnOk.className='btn btn-sage';btnOk.style.marginBottom='10px';
+  btnOk.textContent='Confirmer le paiement complet';
+  btnOk.addEventListener('click',function(){
+    var amt=parseFloat((gid('prov-pay-amt')||{value:c.montant}).value)||c.montant;
+    var thisM=S.currentMonth||new Date().toISOString().slice(0,7);
+    c.lastPaidAmount=amt;c.lastPaidDate=today();c.paidMonth=thisM;
+    c.provisions=[];// Remise à zéro après paiement complet
+    // Upload photo si présente
+    if(window._provPhoto){
+      var photoId='ch-'+c.id+'-'+Date.now();
+      uploadPhotoCloudinary(window._provPhoto,photoId,function(url){
+        c.lastPaidPhoto=url||null;save();schedSync();
+      });
+      window._provPhoto=null;
+    }
+    save();schedSync();
+    dismiss();
+    payTab='done';
+    document.querySelectorAll('#page-paiement .pill-tab').forEach(function(b){b.classList.remove('active');});
+    var dt=gid('pay-tab-done');if(dt)dt.classList.add('active');
+    renderPaiement();renderBilan();
+    toast(c.nom+' paye — '+fmt(amt));
+  });
+
+  var btnCancel=document.createElement('button');btnCancel.type='button';btnCancel.className='btn';
+  btnCancel.style.cssText='color:var(--ink3);background:transparent;';btnCancel.textContent='Annuler';
+  btnCancel.addEventListener('click',function(){window._provPhoto=null;dismiss();});
+  sheet.appendChild(btnOk);sheet.appendChild(btnCancel);
+  overlay.appendChild(sheet);document.body.appendChild(overlay);
+}
+
+window.openProvisionDetail=function(id){
+  var c=S.charges.find(function(x){return x.id===id;});if(!c)return;
+  var mf={bimonthly:.5,quarterly:1/3,biannual:1/6,yearly:1/12};
+  var mensualite=c.montant*(mf[c.freq]||1);
+  var provisions=c.provisions||[];
+  var totalMis=provisions.reduce(function(a,p){return a+(+p.amount||0);},0);
+  var pct=Math.min(100,Math.round(totalMis/c.montant*100));
+  gid('db-title').textContent=c.nom;
+  var body=gid('db-body');body.innerHTML='';
+
+  // Métriques
+  var mr=document.createElement('div');mr.className='metric-row';
+  mr.innerHTML='<div class="metric"><div class="metric-val" style="color:var(--sage)">'+fmt(totalMis)+'</div><div class="metric-lbl">Mis de côté</div></div>'
+    +'<div class="metric"><div class="metric-val">'+fmt(Math.max(0,c.montant-totalMis))+'</div><div class="metric-lbl">Manquant</div></div>';
+  body.appendChild(mr);
+
+  // Barre
+  var prog=document.createElement('div');
+  prog.innerHTML='<div class="bocal-progress" style="margin-bottom:6px;"><div class="bocal-fill" style="width:'+pct+'%;background:'+(pct>=100?'var(--sage)':'var(--gold)')+';"></div></div>'
+    +'<div style="display:flex;justify-content:space-between;font-size:.7rem;color:var(--ink3);margin-bottom:16px;">'
+    +'<span>'+pct+'% — mensualité: '+fmt(mensualite)+'</span>'
+    +(c.lastPaidDate?'<span>Dernier paiement: '+fmtD(c.lastPaidDate)+'</span>':'')+'</div>';
+  body.appendChild(prog);
+
+  // Graphique SVG si historique
+  if(provisions.length>0){
+    var chartDiv=document.createElement('div');
+    chartDiv.style.cssText='margin-bottom:16px;background:var(--ivory2);border-radius:var(--r);padding:14px;';
+    var titleC=document.createElement('div');titleC.className='f-label';titleC.style.marginBottom='12px';titleC.textContent='Historique des provisions';
+    chartDiv.appendChild(titleC);
+    var running=0;
+    var pts=provisions.map(function(p,i){running+=p.amount;return {i:i,val:Math.max(0,running),month:p.month,amount:p.amount};});
+    var W=300,H=80,pad=8,maxV=Math.max(c.montant,running,1);
+    function px(i){return pad+(W-pad*2)*(i/(pts.length||1));}
+    function py(v){return H-pad-(H-pad*2)*(v/maxV);}
+    var ptStr=pts.map(function(p,i){return px(i)+','+py(p.val);}).join(' ');
+    var areaStr=ptStr+' '+px(pts.length-1)+','+(H-pad)+' '+px(0)+','+(H-pad);
+    var svg='<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;display:block;" xmlns="http://www.w3.org/2000/svg">'
+      +'<line x1="'+pad+'" y1="'+py(c.montant)+'" x2="'+(W-pad)+'" y2="'+py(c.montant)+'" stroke="rgba(91,122,95,.3)" stroke-width="1" stroke-dasharray="4,3"/>'
+      +'<polygon points="'+areaStr+'" fill="rgba(201,148,58,.15)"/>'
+      +'<polyline points="'+ptStr+'" fill="none" stroke="var(--gold)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>'
+      +pts.map(function(p,i){return '<circle cx="'+px(i)+'" cy="'+py(p.val)+'" r="3" fill="var(--gold)"/>';}).join('')
+      +'<text x="'+(W-pad-2)+'" y="'+(py(c.montant)-4)+'" text-anchor="end" font-size="8" fill="rgba(91,122,95,.6)">Objectif</text>'
+      +'</svg>';
+    chartDiv.innerHTML+=svg;
+    body.appendChild(chartDiv);
+
+    // Historique liste
+    var hdiv=document.createElement('div');hdiv.className='f-label';hdiv.style.marginBottom='8px';hdiv.textContent='Mouvements';body.appendChild(hdiv);
+    provisions.slice().reverse().forEach(function(p){
+      var el=document.createElement('div');
+      el.style.cssText='display:flex;align-items:center;justify-content:space-between;padding:9px 12px;background:var(--ivory2);border-radius:10px;margin-bottom:6px;';
+      var isAdd=p.amount>0;
+      el.innerHTML='<div style="display:flex;align-items:center;gap:8px;">'
+        +'<div style="width:24px;height:24px;border-radius:50%;background:'+(isAdd?'var(--gold-l)':'var(--sage-l)')+';display:flex;align-items:center;justify-content:center;font-size:.75rem;">'+(isAdd?'&#8679;':'&#10003;')+'</div>'
+        +'<span style="font-size:.8rem;color:var(--ink3);">'+( p.month||fmtD(p.date))+'</span></div>'
+        +'<span style="font-weight:700;color:'+(isAdd?'var(--gold)':'var(--sage)')+';">'+(isAdd?'+':'')+fmt(Math.abs(p.amount))+'</span>';
+      body.appendChild(el);
+    });
+  } else {
+    var noH=document.createElement('div');noH.style.cssText='text-align:center;padding:20px;color:var(--ink3);font-size:.82rem;';
+    noH.textContent='Aucune provision ce cycle.';body.appendChild(noH);
+  }
+  var eb=document.createElement('button');eb.className='btn btn-outline';eb.type='button';eb.style.marginTop='12px';eb.textContent='Modifier la charge';
+  eb.addEventListener('click',function(){closeSheet('sheet-db');setTimeout(function(){openAddCharge(id);},320);});
+  body.appendChild(eb);
+  openSheet('sheet-db');
+};
+window.openAddCharge=function(editId){
+  var c=editId?S.charges.find(function(x){return x.id===editId;}):null;
+  gid('ch-title').textContent=c?'Modifier':'Charge fixe';
+  gid('ch-eid').value=editId||'';
+  gid('ch-del').style.display=c?'':'none';
+  gid('ch-nom').value=c?c.nom:'';
+  gid('ch-montant').value=c?c.montant:'';
+  gid('ch-freq').value=c?c.freq:'monthly';
+  gid('ch-cat').value=c?c.cat:'Loyer / Charges';
+  if(gid('ch-echeance'))gid('ch-echeance').value=c&&c.echeance?c.echeance:'';
+  toggleChEcheance(c?c.freq:'monthly');
+  setScope('ch',c?c.scope:'personal');
+  openSheet('sheet-add-charge');
+};
+window.saveCharge=function(){
+  var n=gid('ch-nom').value.trim(),m=parseFloat(gid('ch-montant').value)||0;
+  if(!n||!m){toast('Remplissez les champs','e');return;}
+  var eid=gid('ch-eid').value;
+  var freq=gid('ch-freq').value;
+  var echeance=gid('ch-echeance')?gid('ch-echeance').value||'':'';
+  var existing=eid?S.charges.find(function(x){return x.id===eid;}):null;
+  var d={id:eid||'c'+uid(),nom:n,montant:m,freq:freq,cat:gid('ch-cat').value,scope:scopes.ch,payeur:null,
+    echeance:echeance,
+    provisions:existing?existing.provisions||[]:[]
+  };if(eid){var idx=S.charges.findIndex(function(x){return x.id===eid;});if(idx>-1)S.charges[idx]=d;}else S.charges.push(d);save();schedSync();closeSheet('sheet-add-charge');toast(eid?'Charge modifiee':'Charge ajoutee');gid('ch-nom').value='';gid('ch-montant').value='';renderCharges();renderBilan();renderPaiement();};
 window.deleteCharge=function(){var id=gid('ch-eid').value;if(!id)return;if(!confirm('Supprimer ?'))return;S.charges=S.charges.filter(function(x){return x.id!==id;});save();schedSync();closeSheet('sheet-add-charge');toast('Supprimee','e');renderCharges();renderBilan();renderPaiement();};
 
 function detectClasse(nom){
@@ -2226,17 +2509,20 @@ function renderPaiement(){
   if(charges.length){
     cont.appendChild(sectionTitle('2 — Charges fixes'));
     charges.forEach(function(c){
+      var isProvision=['bimonthly','quarterly','biannual','yearly'].indexOf(c.freq)>-1;
       var montantM=c.montant*(mf[c.freq]||1);
       var fl={daily:'Chaque jour',weekly:'Chaque semaine',monthly:'Chaque mois',bimonthly:'Tous les 2 mois',quarterly:'Tous les 3 mois',biannual:'Tous les 6 mois',yearly:'Tous les ans'};
       var col=c.scope==='family'?'var(--terra)':myCouleur;
-      // Pour les fréquences > mensuelle: afficher le montant mensuel + info montant réel
       var sub;
-      if(c.freq==='monthly'||c.freq==='daily'||c.freq==='weekly'){
+      if(!isProvision){
         sub=(fl[c.freq]||'')+(c.scope==='family'?' · Famille':' · Personnel');
       } else {
-        sub=(fl[c.freq]||'')+' ('+fmt(c.montant)+' réel)'+(c.scope==='family'?' · Famille':' · Personnel');
+        var provInfo=calcProvisionMensualite(c);
+        sub='Idéal ce mois: '+fmt(provInfo.mensualite)+' · '+provInfo.pct+'% atteint · '+provInfo.moisRestants+' mois restant'+(c.scope==='family'?' · Famille':' · Personnel');
+        col='var(--gold)';
+        montantM=provInfo.mensualite;
       }
-      cont.appendChild(payCard(c.nom,montantM,sub,col,function(){openAS('charge',c.id);}));
+      cont.appendChild(payCard(c.nom,montantM,sub,col,function(){openChargeAction(c.id);}));
     });hasContent=true;
   }
 
@@ -2345,8 +2631,13 @@ function renderPaye(){
   }
   if(paidCharges.length){
     var hd2=document.createElement('div');hd2.className='pay-section-title';hd2.textContent='Charges fixes';cont.appendChild(hd2);
+    var mf2={daily:30,weekly:4.33,monthly:1,bimonthly:.5,quarterly:1/3,biannual:1/6,yearly:1/12};
     paidCharges.forEach(function(c){
-      cont.appendChild(paidCard(c.nom,c.montant,'Mensuelle'+(c.scope==='family'?' · Famille':''),null));
+      var isProvision=['bimonthly','quarterly','biannual','yearly'].indexOf(c.freq)>-1;
+      var montantAff=isProvision?c.montant*(mf2[c.freq]||1):c.montant;
+      var subAff=isProvision?(c.lastPaidAmount?'Payé — '+fmt(c.lastPaidAmount):'Provision ce mois'):'Mensuelle';
+      subAff+=c.scope==='family'?' · Famille':'';
+      cont.appendChild(paidCard(c.nom,montantAff,subAff,null));
     });
   }
   if(paidBoc.length){
@@ -2770,6 +3061,13 @@ window.openPhotoFS=function(src){
     +'<button type="button" style="position:absolute;top:calc(env(safe-area-inset-top,44px)+10px);right:16px;background:rgba(255,255,255,.15);border:none;color:#fff;width:36px;height:36px;border-radius:50%;font-size:1.1rem;cursor:pointer;">x</button>';
   ov.addEventListener('click',function(){document.body.removeChild(ov);});
   document.body.appendChild(ov);
+};
+
+window.toggleChEcheance=function(freq){
+  var grp=gid('ch-echeance-group');
+  if(!grp)return;
+  var isProvision=['bimonthly','quarterly','biannual','yearly'].indexOf(freq)>-1;
+  grp.style.display=isProvision?'':'none';
 };
 window.onload=function(){
   load();
