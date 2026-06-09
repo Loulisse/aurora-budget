@@ -625,7 +625,18 @@ function today(){return new Date().toISOString().split('T')[0];}
 function uid(){return Math.random().toString(36).slice(2,9).toUpperCase();}
 function toast(msg,t){var el=gid('toast');el.textContent=msg;el.className='toast show '+(t||'s');clearTimeout(el._t);el._t=setTimeout(function(){el.className='toast';},2800);}
 function confetti(x,y){['#5C7A5F','#C4622D','#C9943A','#3B6B8C','#C4393B'].forEach(function(c,i){var d=document.createElement('div');d.className='confetti-dot';d.style.cssText='left:'+(x+(Math.random()-.5)*80)+'px;top:'+y+'px;background:'+c+';animation-delay:'+(i*.06)+'s';document.body.appendChild(d);setTimeout(function(){d.remove();},1200);});}
-function save(){localStorage.setItem(LS,JSON.stringify(S));}
+function save(){
+  try{
+    localStorage.setItem(LS,JSON.stringify(S));
+  }catch(e){
+    // Quota dépassé — sauvegarder sans les photos
+    try{
+      var slim=JSON.parse(JSON.stringify(S));
+      slim.factures=slim.factures.map(function(f){return Object.assign({},f,{photo:null});});
+      localStorage.setItem(LS,JSON.stringify(slim));
+    }catch(e2){toast('Erreur sauvegarde','e');}
+  }
+}
 function load(){try{var r=localStorage.getItem(LS);if(r)Object.assign(S,JSON.parse(r));}catch(e){}GH_TOKEN=localStorage.getItem('aurora_gh_token')||'';if(!S.couleur)S.couleur='#5C7A5F';}
 function ghH(){return{'Authorization':'token '+GH_TOKEN,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'};}
 function ghRead(cb){if(!GH_TOKEN){cb(null,null);return;}fetch(GH_API+'?t='+Date.now(),{headers:ghH()}).then(function(r){if(r.status===404){cb(null,null);return null;}return r.ok?r.json():null;}).then(function(j){if(!j){cb(null,null);return;}if(!j.content){cb(null,null);return;}try{cb(JSON.parse(atob(j.content.replace(/\n/g,''))),j.sha);}catch(e){cb(null,null);}}).catch(function(){cb(null,null);});}
@@ -1740,8 +1751,9 @@ window.saveFacture=function(){
   if(!m){toast('Entrez un montant','e');return;}
   var eid=gv('fac-eid');
   var recEl=document.getElementById('fac-recurrence');
+  var facId=eid||'f'+uid();
   var d={
-    id:eid||'f'+uid(),
+    id:facId,
     nom:nom,
     emetteur:gv('fac-nom'),
     montant:m,
@@ -1753,7 +1765,7 @@ window.saveFacture=function(){
     recurrence:recEl?recEl.value:'',
     scope:scopes.fac,
     payeur:S.prenom,
-    photo:currentPhoto&&currentPhoto.length<500000?currentPhoto:(currentPhoto?currentPhoto.substring(0,500000):null),
+    photo:eid?(function(){var f=S.factures.find(function(x){return x.id===eid;});return f?f.photo||null:null;})():null,
     paid:false,
     paidDate:null
   };
@@ -1763,12 +1775,24 @@ window.saveFacture=function(){
   } else {
     S.factures.push(d);
   }
+  // Sauvegarder d'abord sans photo
   save();schedSync();
   try{stopCams();}catch(e){}
-  currentPhoto=null;
   closeSheet('sheet-add-facture');
   toast(eid?'Facture modifiee':'Facture enregistree');
   renderBilan();renderFactures();renderPaiement();
+  // Upload photo en arrière-plan si disponible
+  if(currentPhoto&&GH_TOKEN){
+    var fname='fac-'+facId+'-'+Date.now()+'.jpg';
+    uploadPhotoGH(currentPhoto, fname, function(url){
+      if(url){
+        var f=S.factures.find(function(x){return x.id===facId;});
+        if(f){f.photo=url;save();schedSync();}
+        toast('Photo sauvegardee');
+      }
+    });
+  }
+  currentPhoto=null;
 }
 
 
@@ -2650,6 +2674,34 @@ window.saveDepense=function(){
   toast('-'+fmt(m)+' — '+nom);
   renderBilan();
 };
+
+
+// ── UPLOAD PHOTO GITHUB ──────────────────────────
+function uploadPhotoGH(dataUrl, filename, cb){
+  if(!GH_TOKEN){cb(null);return;}
+  // Extraire le base64 pur
+  var b64=dataUrl.split(',')[1];
+  if(!b64){cb(null);return;}
+  var api='https://api.github.com/repos/'+GH_OWNER+'/'+GH_REPO+'/contents/photos/'+filename;
+  // Vérifier si existe déjà
+  fetch(api+'?t='+Date.now(),{headers:ghH()})
+    .then(function(r){return r.ok?r.json():{sha:null};})
+    .then(function(j){
+      var body={message:'Photo '+filename,content:b64,branch:'main'};
+      if(j.sha)body.sha=j.sha;
+      return fetch(api,{method:'PUT',headers:ghH(),body:JSON.stringify(body)});
+    })
+    .then(function(r){return r.ok?r.json():null;})
+    .then(function(j){
+      if(j&&j.content&&j.content.download_url){
+        cb(j.content.download_url);
+      } else {
+        // Construire l'URL raw manuellement
+        cb('https://raw.githubusercontent.com/'+GH_OWNER+'/'+GH_REPO+'/main/photos/'+filename);
+      }
+    })
+    .catch(function(){cb(null);});
+}
 
 window.onload=function(){
   load();
