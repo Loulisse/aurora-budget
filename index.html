@@ -2197,11 +2197,13 @@ function renderPaiement(){
 
   var hasContent=false;
 
-  // ── 1. FACTURES URGENTES (prio 1-2 ou en retard) ──
+  // ── 1. FACTURES URGENTES : prio 1, OU en retard (d<0) ──
+  var shown={};
   var urgent=factures.filter(function(f){
     var d=Math.ceil((new Date(f.echeance||'2099-01-01')-now)/86400000);
-    return f.prio<=2||d<0;
+    return f.prio===1||d<0;
   }).sort(function(a,b){return a.prio-b.prio;});
+  urgent.forEach(function(f){shown[f.id]=true;});
   if(urgent.length){
     cont.appendChild(sectionTitle('1 — Urgent'));
     urgent.forEach(function(f){
@@ -2223,11 +2225,11 @@ function renderPaiement(){
     });hasContent=true;
   }
 
-  // ── 3. FACTURES RAPPELS (prio 2, pas en retard) ──
+  // ── 3. FACTURES RAPPELS : prio 2 non encore affichées ──
   var rappels=factures.filter(function(f){
-    var d=Math.ceil((new Date(f.echeance||'2099-01-01')-now)/86400000);
-    return f.prio===2&&d>=0;
+    return f.prio===2&&!shown[f.id];
   }).sort(function(a,b){return(a.echeance||'').localeCompare(b.echeance||'');});
+  rappels.forEach(function(f){shown[f.id]=true;});
   if(rappels.length){
     cont.appendChild(sectionTitle('3 — Rappels'));
     rappels.forEach(function(f){
@@ -2236,8 +2238,9 @@ function renderPaiement(){
     });hasContent=true;
   }
 
-  // ── 4. FACTURES EN COURS (prio 3) ──
-  var encours=factures.filter(function(f){return f.prio===3;}).sort(function(a,b){return(a.echeance||'').localeCompare(b.echeance||'');});
+  // ── 4. FACTURES EN COURS : prio 3 non encore affichées ──
+  var encours=factures.filter(function(f){return f.prio===3&&!shown[f.id];}).sort(function(a,b){return(a.echeance||'').localeCompare(b.echeance||'');});
+  encours.forEach(function(f){shown[f.id]=true;});
   if(encours.length){
     cont.appendChild(sectionTitle('4 — En cours'));
     encours.forEach(function(f){
@@ -2256,8 +2259,8 @@ function renderPaiement(){
     });hasContent=true;
   }
 
-  // ── 6. FACTURES EN AVANCE (prio 4) ──
-  var avance=factures.filter(function(f){return f.prio===4;}).sort(function(a,b){return(a.echeance||'').localeCompare(b.echeance||'');});
+  // ── 6. FACTURES EN AVANCE : prio 4 non encore affichées ──
+  var avance=factures.filter(function(f){return f.prio===4&&!shown[f.id];}).sort(function(a,b){return(a.echeance||'').localeCompare(b.echeance||'');});
   if(avance.length){
     cont.appendChild(sectionTitle('6 — En avance'));
     avance.forEach(function(f){
