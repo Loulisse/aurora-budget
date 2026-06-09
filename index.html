@@ -1784,22 +1784,27 @@ window.saveFacture=function(){
   closeSheet('sheet-add-facture');
   toast(eid?'Facture modifiee':'Facture enregistree');
   renderBilan();renderFactures();renderPaiement();
-  // Upload photo en arrière-plan si disponible
-  if(currentPhoto&&GH_TOKEN){
-    var fname='fac-'+facId+'-'+Date.now()+'.jpg';
-    uploadPhotoGH(currentPhoto, fname, function(url){
+  // Upload photo sur Cloudinary en arrière-plan
+  if(currentPhoto){
+    var photoToUpload=currentPhoto;
+    currentPhoto=null;
+    toast('Upload photo...');
+    uploadPhotoCloudinary(photoToUpload, facId, function(url){
       if(url){
-        var f=S.factures.find(function(x){return x.id===facId;});
-        if(f){f.photo=url;save();schedSync();}
-        toast('Photo sauvegardee');
+        var f2=S.factures.find(function(x){return x.id===facId;});
+        if(f2){f2.photo=url;save();schedSync();}
+        toast('Photo enregistree');
+      } else {
+        toast('Photo non sauvegardee','e');
       }
     });
+  } else {
+    currentPhoto=null;
   }
-  currentPhoto=null;
 }
 
 
-window.deleteFacForm=function(){var id=gid('fac-eid').value;if(!id)return;if(!confirm('Supprimer ?'))return;S.factures=S.factures.filter(function(x){return x.id!==id;});save();schedSync();closeSheet('sheet-add-facture');toast('Supprimee','e');renderBilan();renderFactures();renderPaiement();};
+window.deleteFacForm=function(){var id=gid('fac-eid').value;if(!id)return;if(!confirm('Supprimer ?'))return;deletePhoto(id);S.factures=S.factures.filter(function(x){return x.id!==id;});save();schedSync();closeSheet('sheet-add-facture');toast('Supprimee','e');renderBilan();renderFactures();renderPaiement();};
 
 window.openChargeAction=function(id){
   var c=S.charges.find(function(x){return x.id===id;});
@@ -2416,30 +2421,23 @@ window.openFacDetail=function(id){var f=S.factures.find(function(x){return x.id=
   if(f.photo){
     var wrap=document.getElementById('fac-photo-wrap');
     if(!wrap){wrap=document.createElement('div');wrap.id='fac-photo-wrap';gid('df-body').prepend(wrap);}
-    // Cas 1: base64 direct (anciennes factures)
-    if(f.photo.indexOf('data:')===0){
-      wrap.innerHTML='<img src="'+f.photo+'" class="fac-photo" alt="Facture" onclick="openPhotoFS(this.src)" style="cursor:zoom-in;"/>';
+    var photoSrc=null;
+    // Cas 1: URL Cloudinary ou externe (nouvelles factures)
+    if(f.photo.indexOf('http')===0){
+      photoSrc=f.photo;
     }
-    // Cas 2: URL GitHub → charger via API
-    else if(f.photo.indexOf('github')>-1||f.photo.indexOf('jsdelivr')>-1){
-      wrap.innerHTML='<div style="text-align:center;padding:14px;color:var(--ink3);font-size:.78rem;">Chargement...</div>';
-      var photoFilename=f.photo.split('/photos/').pop().split('?')[0];
-      if(photoFilename&&GH_TOKEN){
-        var photoApi='https://api.github.com/repos/'+GH_OWNER+'/'+GH_REPO+'/contents/photos/'+photoFilename;
-        fetch(photoApi,{headers:ghH()})
-          .then(function(r){return r.ok?r.json():null;})
-          .then(function(j){
-            if(!wrap.parentNode)return;
-            if(j&&j.content){
-              var src='data:image/jpeg;base64,'+j.content.replace(/[\n\r]/g,'');
-              wrap.innerHTML='<img src="'+src+'" class="fac-photo" alt="Facture" onclick="openPhotoFS(this.src)" style="cursor:zoom-in;"/>';
-            } else {wrap.innerHTML='';}
-          }).catch(function(){if(wrap.parentNode)wrap.innerHTML='';});
-      } else {wrap.innerHTML='';}
+    // Cas 2: référence locale ancienne
+    else if(f.photo.indexOf('local:')===0){
+      photoSrc=loadPhoto(f.photo.slice(6));
     }
-    // Cas 3: URL quelconque
-    else {
-      wrap.innerHTML='<img src="'+f.photo+'" class="fac-photo" alt="Facture" onclick="openPhotoFS(this.src)" style="cursor:zoom-in;" onerror="this.parentNode.innerHTML=\'\'" />';
+    // Cas 3: base64 direct (très anciennes factures)
+    else if(f.photo.indexOf('data:')===0){
+      photoSrc=f.photo;
+    }
+    if(photoSrc){
+      wrap.innerHTML='<img src="'+photoSrc+'" class="fac-photo" alt="Facture" onclick="openPhotoFS(this.src)" style="cursor:zoom-in;border-radius:12px;width:100%;display:block;"/>';
+    } else {
+      wrap.innerHTML='';
     }
   }if(f.photo){gid('dl-fac-btn').addEventListener('click',function(){downloadFac(id);});}var actions=gid('fac-actions');if(!f.paid){var pb=mkEl('button',{className:'btn btn-sage',type:'button',textContent:'Marquer comme payee'});pb.addEventListener('click',function(e){markPaid(id,e);});actions.appendChild(pb);}else{var ub=mkEl('button',{className:'btn btn-outline',type:'button',textContent:'Annuler le paiement'});ub.addEventListener('click',function(){markUnpaid(id);});actions.appendChild(ub);}var eb=mkEl('button',{className:'btn btn-outline',type:'button',textContent:'Modifier'});eb.addEventListener('click',function(){closeSheet('sheet-df');setTimeout(function(){openAddFac(curFacId);},320);});actions.appendChild(eb);var db=mkEl('button',{className:'btn btn-outline',type:'button',textContent:'Dupliquer'});db.addEventListener('click',function(){closeSheet('sheet-df');duplicateFac(id);});actions.appendChild(db);openSheet('sheet-df');};
 
@@ -2710,30 +2708,40 @@ window.saveDepense=function(){
 
 
 // ── UPLOAD PHOTO GITHUB ──────────────────────────
-function uploadPhotoGH(dataUrl, filename, cb){
-  if(!GH_TOKEN){cb(null);return;}
-  // Extraire le base64 pur
-  var b64=dataUrl.split(',')[1];
-  if(!b64){cb(null);return;}
-  var api='https://api.github.com/repos/'+GH_OWNER+'/'+GH_REPO+'/contents/photos/'+filename;
-  // Vérifier si existe déjà
-  fetch(api+'?t='+Date.now(),{headers:ghH()})
-    .then(function(r){return r.ok?r.json():{sha:null};})
-    .then(function(j){
-      var body={message:'Photo '+filename,content:b64,branch:'main'};
-      if(j.sha)body.sha=j.sha;
-      return fetch(api,{method:'PUT',headers:ghH(),body:JSON.stringify(body)});
-    })
+// ── CLOUDINARY PHOTO UPLOAD ─────────────────────
+var CL_CLOUD='ddn6im7rn';
+var CL_PRESET='Aurora_photos';
+
+function uploadPhotoCloudinary(dataUrl, facId, cb){
+  var url='https://api.cloudinary.com/v1_1/'+CL_CLOUD+'/image/upload';
+  var fd=new FormData();
+  fd.append('file', dataUrl);
+  fd.append('upload_preset', CL_PRESET);
+  fd.append('public_id', 'aurora/fac-'+facId);
+  fd.append('tags', 'aurora,facture');
+  fetch(url,{method:'POST',body:fd})
     .then(function(r){return r.ok?r.json():null;})
     .then(function(j){
-      if(j&&j.content&&j.content.name){
-        cb('https://cdn.jsdelivr.net/gh/'+GH_OWNER+'/'+GH_REPO+'@main/photos/'+j.content.name);
-      } else {
-        // Utiliser jsDelivr CDN (CORS-friendly, sert les assets GitHub correctement)
-        cb('https://cdn.jsdelivr.net/gh/'+GH_OWNER+'/'+GH_REPO+'@main/photos/'+filename);
-      }
+      if(j&&j.secure_url){cb(j.secure_url);}
+      else{cb(null);}
     })
     .catch(function(){cb(null);});
+}
+
+// Fallback localStorage pour photos déjà stockées localement
+var LS_PHOTOS='aurora_photos_v1';
+function loadPhoto(facId){
+  try{
+    var photos=JSON.parse(localStorage.getItem(LS_PHOTOS)||'{}');
+    return photos[facId]||null;
+  }catch(e){return null;}
+}
+function deletePhoto(facId){
+  try{
+    var photos=JSON.parse(localStorage.getItem(LS_PHOTOS)||'{}');
+    delete photos[facId];
+    localStorage.setItem(LS_PHOTOS,JSON.stringify(photos));
+  }catch(e){}
 }
 
 
