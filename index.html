@@ -1050,44 +1050,64 @@ function renderBilanPerso(cont){
   var mf={daily:30,weekly:4.33,monthly:1,bimonthly:.5,quarterly:1/3,biannual:1/6,yearly:1/12};
   var hs=calcHealthScore();
 
-  // ── SCORE CARD ──
+  // ── CAPITAL CARD (en haut, bien visible) ──
+  var rev=S.incomes.reduce(function(a,i){return a+(+i.amount||0);},0);
+  var depenses=(S.depenses||[]).reduce(function(a,d){return a+(+d.montant||0);},0);
+  var facPayees=S.factures.filter(function(f){return f.paid;}).reduce(function(a,f){return a+(+f.montant||0);},0);
+  var charges=S.charges.filter(function(c){return c.scope==='personal';}).reduce(function(a,c){return a+(+c.montant||0)*(mf[c.freq]||1);},0);
+  var bocaux=S.bocaux.filter(function(b){return b.scope!=='family';}).reduce(function(a,b){return a+(+b.actuel||0);},0);
+  var capital=rev-facPayees-depenses;
+  var isNeg=capital<0;
+
+  var cc=document.createElement('div');
+  cc.style.cssText='background:var(--ink);border-radius:var(--r-lg);padding:20px 20px 18px;margin-bottom:14px;position:relative;overflow:hidden;';
+  cc.innerHTML='<div style="position:absolute;top:-40px;right:-40px;width:160px;height:160px;background:radial-gradient(circle,rgba(197,212,198,.12),transparent 70%);border-radius:50%;pointer-events:none;"></div>'
+    +'<div style="font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:rgba(255,255,255,.45);margin-bottom:8px;">Capital disponible</div>'
+    +'<div style="font-family:var(--serif);font-size:2.8rem;letter-spacing:-.03em;color:'+(isNeg?'#F4A28C':'#fff')+';line-height:1;margin-bottom:8px;">'+fmt(capital)+'</div>'
+    +'<div style="display:flex;gap:16px;font-size:.7rem;color:rgba(255,255,255,.5);">'
+    +'<span>Revenus <span style="color:rgba(255,255,255,.8);font-weight:700;">'+fmt(rev)+'</span></span>'
+    +'<span>Payé <span style="color:rgba(255,255,255,.8);font-weight:700;">'+fmt(facPayees+depenses)+'</span></span>'
+    +'</div>';
+  cont.appendChild(cc);
+
+  // ── SCORE SANTÉ ──
   var sc=document.createElement('div');
-  sc.style.cssText='background:var(--ink);border-radius:var(--r-lg);padding:20px;margin-bottom:14px;display:flex;align-items:center;gap:16px;';
-  // Grade circle
+  sc.style.cssText='background:var(--ivory2);border-radius:var(--r-lg);padding:14px 16px;margin-bottom:14px;display:flex;align-items:center;gap:14px;';
   var grade=document.createElement('div');
-  grade.style.cssText='width:60px;height:60px;border-radius:50%;border:3px solid '+hs.color+';display:flex;align-items:center;justify-content:center;flex-shrink:0;';
-  grade.innerHTML='<span style="font-family:var(--serif);font-size:1.8rem;font-weight:800;color:'+hs.color+';">'+hs.grade+'</span>';
+  grade.style.cssText='width:48px;height:48px;border-radius:50%;border:2.5px solid '+hs.color+';display:flex;align-items:center;justify-content:center;flex-shrink:0;';
+  grade.innerHTML='<span style="font-family:var(--serif);font-size:1.5rem;font-weight:800;color:'+hs.color+';">'+hs.grade+'</span>';
   var info=document.createElement('div');info.style.flex='1';
-  var scoreBar='<div style="height:4px;background:rgba(255,255,255,.15);border-radius:2px;margin-top:8px;overflow:hidden;"><div style="width:'+hs.score+'%;height:100%;background:'+hs.color+';border-radius:2px;transition:width .6s;"></div></div>';
-  var desc=hs.score>=85?'Excellente santé financière':hs.score>=70?'Bonne situation':hs.score>=55?'Situation correcte':hs.score>=40?'Attention requise':'Situation critique';
-  info.innerHTML='<div style="font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:rgba(255,255,255,.5);">Score santé</div>'
-    +'<div style="font-size:.95rem;font-weight:700;color:#fff;margin-top:2px;">'+desc+'</div>'
-    +scoreBar;
+  var desc=hs.score>=85?'Excellente santé':hs.score>=70?'Bonne situation':hs.score>=55?'Situation correcte':hs.score>=40?'Attention requise':'Situation critique';
+  info.innerHTML='<div style="font-size:.62rem;color:var(--ink3);font-weight:600;text-transform:uppercase;letter-spacing:.1em;">Score santé</div>'
+    +'<div style="font-weight:700;font-size:.9rem;margin-top:1px;">'+desc+'</div>'
+    +'<div style="height:4px;background:var(--ivory3);border-radius:2px;margin-top:6px;overflow:hidden;"><div style="width:'+hs.score+'%;height:100%;background:'+hs.color+';border-radius:2px;transition:width .6s;"></div></div>';
   sc.appendChild(grade);sc.appendChild(info);
   cont.appendChild(sc);
 
   // ── 4 CASES ──
-  var rev=hs.rev;
   var facNP=hs.facNP;
-  var charges=S.charges.filter(function(c){return c.scope==='personal';}).reduce(function(a,c){return a+(+c.montant||0)*(mf[c.freq]||1);},0);
-  var bocaux=S.bocaux.filter(function(b){return b.scope!=='family';}).reduce(function(a,b){return a+(+b.actuel||0);},0);
-  var solde=rev-hs.facNP-charges-bocaux;
-
   function catCard(icon,label,val,color,action){
     var el=document.createElement('div');el.className='metric';el.style.cursor='pointer';
-    el.innerHTML='<div style="font-size:1.3rem;margin-bottom:5px;">'+icon+'</div>'
-      +'<div class="metric-val" style="color:'+color+';font-size:1.15rem;">'+fmt(val)+'</div>'
+    el.innerHTML='<div style="font-size:1.2rem;margin-bottom:4px;">'+icon+'</div>'
+      +'<div class="metric-val" style="color:'+color+';font-size:1.1rem;">'+fmt(val)+'</div>'
       +'<div class="metric-lbl">'+label+'</div>';
     el.addEventListener('click',action);return el;
   }
-  var grid=document.createElement('div');grid.className='metric-row';grid.style.gridTemplateColumns='1fr 1fr';
+  var grid=document.createElement('div');grid.className='metric-row';
   grid.appendChild(catCard('&#128184;','Revenus',rev,'var(--sage)',function(){switchTab('revenus',gid('nav-revenus'));}));
-  grid.appendChild(catCard('&#128203;','Factures',facNP,'var(--red)',function(){switchTab('factures',gid('nav-factures'));}));
+  grid.appendChild(catCard('&#128203;','A payer',facNP,'var(--red)',function(){switchTab('factures',gid('nav-factures'));}));
   cont.appendChild(grid);
-  var grid2=document.createElement('div');grid2.className='metric-row';grid2.style.gridTemplateColumns='1fr 1fr';
+  var grid2=document.createElement('div');grid2.className='metric-row';
   grid2.appendChild(catCard('&#128257;','Charges/mois',charges,'var(--terra)',function(){switchTab('charges',gid('nav-charges'));}));
-  grid2.appendChild(catCard('&#129412;','Épargne',bocaux,'var(--blue)',function(){switchTab('epargne',gid('nav-epargne'));}));
+  grid2.appendChild(catCard('&#129412;','Epargne',bocaux,'var(--blue)',function(){switchTab('epargne',gid('nav-epargne'));}));
   cont.appendChild(grid2);
+
+  // ── GRAPHIQUE ──
+  var history=buildCapitalHistory();
+  renderCapitalGraph(cont, history, isNeg?'var(--red)':hs.color);
+
+  // ── PRÉDICTION ──
+  renderPrediction(cont, history);
 
   // ── DERNIÈRES DÉPENSES ──
   if(S.depenses&&S.depenses.length){
@@ -1099,24 +1119,12 @@ function renderBilanPerso(cont){
     dhd.appendChild(dadd);cont.appendChild(dhd);
     depSorted.forEach(function(d){
       var el=document.createElement('div');el.className='income-item';
-      el.style.cursor='default';
       el.innerHTML='<div class="income-icon" style="background:var(--red-l);">'+(DEP_ICONS[d.cat]||'&#128230;')+'</div>'
         +'<div class="income-body"><div class="income-name">'+d.nom+'</div>'
         +'<div class="income-date">'+fmtD(d.date)+(d.scope==='family'?' · Famille':'')+'</div></div>'
         +'<div class="income-amount" style="color:var(--red);">-'+fmt(d.montant)+'</div>';
       cont.appendChild(el);
     });
-  }
-
-  // ── GRAPHIQUE ──
-  var history=buildCapitalHistory();
-  renderCapitalGraph(cont, history, hs.color);
-
-  // ── PRÉDICTION ──
-  renderPrediction(cont, history);
-
-  if(!rev&&!facNP&&!charges){
-    cont.innerHTML='<div class="empty-state"><div class="empty-emoji">&#127807;</div><div class="empty-msg">Tout est calme.<br>Appuyez sur + pour commencer.</div></div>';
   }
 }
 
@@ -1257,8 +1265,9 @@ window.downloadFac=function(id){var f=S.factures.find(function(x){return x.id===
 function catIcon(cat){var map={'Loyer':'&#127968;','Credit':'&#128179;','Leasing':'&#128664;','Assurance':'&#129521;','Telecom':'&#128241;','Energie':'&#9889;','Loisirs':'&#127916;','Transport':'&#128651;','Sante':'&#128138;','Autre':'&#128230;'};var k=Object.keys(map).find(function(k){return cat.indexOf(k)>-1;});return map[k]||'&#128230;';}
 function renderCharges(){
   var total=calcFixed();
-  var totPerso=S.charges.filter(function(c){return c.scope==='personal';}).reduce(function(a,c){var m={monthly:1,bimonthly:.5,quarterly:1/3,yearly:1/12};return a+(+c.montant||0)*(m[c.freq]||1);},0);
-  var totFam=S.charges.filter(function(c){return c.scope==='family';}).reduce(function(a,c){var m={monthly:1,bimonthly:.5,quarterly:1/3,yearly:1/12};return a+(+c.montant||0)*(m[c.freq]||1);},0);
+  var mfull={daily:30,weekly:4.33,monthly:1,bimonthly:.5,quarterly:1/3,biannual:1/6,yearly:1/12};
+  var totPerso=S.charges.filter(function(c){return c.scope==='personal';}).reduce(function(a,c){return a+(+c.montant||0)*(mfull[c.freq]||1);},0);
+  var totFam=S.charges.filter(function(c){return c.scope==='family';}).reduce(function(a,c){return a+(+c.montant||0)*(mfull[c.freq]||1);},0);
   gid('charges-summary').innerHTML='<div class="metric"><div class="metric-val" style="color:var(--terra)">'+fmt(total)+'</div><div class="metric-lbl">Total mensuel</div></div><div class="metric"><div class="metric-val">'+S.charges.length+'</div><div class="metric-lbl">Charges actives</div></div>';
   var cont=gid('charges-list');
   if(!S.charges.length){cont.innerHTML='<div class="empty-state"><div class="empty-emoji">&#128257;</div><div class="empty-msg">Ajoutez vos charges fixes.</div></div>';return;}
@@ -2219,8 +2228,14 @@ function renderPaiement(){
     charges.forEach(function(c){
       var montantM=c.montant*(mf[c.freq]||1);
       var fl={daily:'Chaque jour',weekly:'Chaque semaine',monthly:'Chaque mois',bimonthly:'Tous les 2 mois',quarterly:'Tous les 3 mois',biannual:'Tous les 6 mois',yearly:'Tous les ans'};
-      var sub=(fl[c.freq]||'')+(c.scope==='family'?' · Famille':' · Personnel');
       var col=c.scope==='family'?'var(--terra)':myCouleur;
+      // Pour les fréquences > mensuelle: afficher le montant mensuel + info montant réel
+      var sub;
+      if(c.freq==='monthly'||c.freq==='daily'||c.freq==='weekly'){
+        sub=(fl[c.freq]||'')+(c.scope==='family'?' · Famille':' · Personnel');
+      } else {
+        sub=(fl[c.freq]||'')+' ('+fmt(c.montant)+' réel)'+(c.scope==='family'?' · Famille':' · Personnel');
+      }
       cont.appendChild(payCard(c.nom,montantM,sub,col,function(){openAS('charge',c.id);}));
     });hasContent=true;
   }
