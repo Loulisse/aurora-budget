@@ -35,8 +35,9 @@ html,body{height:100%;background:var(--ivory);color:var(--ink);font-family:var(-
 #app{position:relative;height:100dvh;}
 .screen{position:absolute;inset:0;display:flex;flex-direction:column;background:var(--ivory);opacity:0;pointer-events:none;transition:opacity .28s ease;z-index:1;}
 .screen.active{opacity:1;pointer-events:all;z-index:10;}
-.page{display:none;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 16px calc(108px + var(--safe-b));;min-height:0;}
-.page.active{display:block;flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+#screen-main{display:flex;flex-direction:column;}
+.page{display:none;}
+.page.active{display:block;position:absolute;top:0;left:0;right:0;bottom:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 16px calc(108px + var(--safe-b));}
 @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 #screen-auth{justify-content:center;align-items:center;padding:28px 24px;text-align:center;}
 .auth-blob{width:130px;height:130px;margin:0 auto 20px;background:radial-gradient(circle at 40% 40%,var(--sage-m),var(--gold-l) 60%,var(--terra-m));border-radius:60% 40% 70% 30%/50% 60% 40% 50%;animation:morph 8s ease-in-out infinite;display:flex;align-items:center;justify-content:center;font-size:2.8rem;}
@@ -308,6 +309,7 @@ html,body{height:100%;background:var(--ivory);color:var(--ink);font-family:var(-
       <div class="topbar-avatar" id="tb-avatar" onclick="openSheet('sheet-profile')">A</div>
     </div>
   </div>
+  <div style="position:relative;flex:1;overflow:hidden;">
   <div id="page-bilan" class="page active">
     <div class="pill-tabs">
       <button class="pill-tab active" id="bilan-tab-perso" onclick="setBilanTab(this,'perso')">Personnel</button>
@@ -340,6 +342,7 @@ html,body{height:100%;background:var(--ivory);color:var(--ink);font-family:var(-
   </div>
   <div id="page-famille" class="page"><div id="famille-content"></div></div>
   <div id="page-epargne" class="page"><div id="epargne-content"></div></div>
+  </div><!-- /pages-wrapper -->
   <nav class="bottomnav">
     <button class="nav-item active" id="nav-bilan" onclick="switchTab('bilan',this)"><span class="ni-icon">&#127968;</span><span class="ni-label">Bilan</span></button>
     <button class="nav-item" id="nav-revenus" onclick="switchTab('revenus',this)"><span class="ni-icon">&#128184;</span><span class="ni-label">Revenus</span></button>
@@ -2408,7 +2411,35 @@ function doPrevMonth(){
 }
 
 
-window.openFacDetail=function(id){var f=S.factures.find(function(x){return x.id===id;});if(!f)return;curFacId=id;gid('df-title').textContent=f.nom;var h='';if(f.photo)h+='<img src="'+f.photo+'" class="fac-photo" alt="" onerror="this.style.display=\'none\'"/>';h+='<div class="metric-row"><div class="metric"><div class="metric-val">'+fmt(f.montant)+'</div><div class="metric-lbl">Montant</div></div><div class="metric"><div class="metric-val" style="font-size:1.1rem;">'+fmtD(f.echeance)+'</div><div class="metric-lbl">Echeance</div></div></div>';h+='<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;">'+pBadge(f);if(f.ref)h+='<span class="f-badge fb-grey">Ref: '+f.ref+'</span>';if(f.iban)h+='<span class="f-badge fb-grey">'+f.iban+'</span>';h+='<span class="f-badge '+(f.scope==='family'?'fb-sage':'fb-grey')+'">'+(f.scope==='family'?'Famille':'Personnel')+'</span></div>';if(f.photo)h+='<button class="dl-btn" id="dl-fac-btn" type="button">Telecharger / Partager</button>';h+='<div style="display:flex;flex-direction:column;gap:8px;" id="fac-actions"></div>';gid('df-body').innerHTML=h;if(f.photo){gid('dl-fac-btn').addEventListener('click',function(){downloadFac(id);});}var actions=gid('fac-actions');if(!f.paid){var pb=mkEl('button',{className:'btn btn-sage',type:'button',textContent:'Marquer comme payee'});pb.addEventListener('click',function(e){markPaid(id,e);});actions.appendChild(pb);}else{var ub=mkEl('button',{className:'btn btn-outline',type:'button',textContent:'Annuler le paiement'});ub.addEventListener('click',function(){markUnpaid(id);});actions.appendChild(ub);}var eb=mkEl('button',{className:'btn btn-outline',type:'button',textContent:'Modifier'});eb.addEventListener('click',function(){closeSheet('sheet-df');setTimeout(function(){openAddFac(curFacId);},320);});actions.appendChild(eb);var db=mkEl('button',{className:'btn btn-outline',type:'button',textContent:'Dupliquer'});db.addEventListener('click',function(){closeSheet('sheet-df');duplicateFac(id);});actions.appendChild(db);openSheet('sheet-df');};
+window.openFacDetail=function(id){var f=S.factures.find(function(x){return x.id===id;});if(!f)return;curFacId=id;gid('df-title').textContent=f.nom;var h='';if(f.photo)h+='<div id="fac-photo-wrap"><div style="text-align:center;padding:20px;color:var(--ink3);font-size:.8rem;">Chargement photo...</div></div>';h+='<div class="metric-row"><div class="metric"><div class="metric-val">'+fmt(f.montant)+'</div><div class="metric-lbl">Montant</div></div><div class="metric"><div class="metric-val" style="font-size:1.1rem;">'+fmtD(f.echeance)+'</div><div class="metric-lbl">Echeance</div></div></div>';h+='<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;">'+pBadge(f);if(f.ref)h+='<span class="f-badge fb-grey">Ref: '+f.ref+'</span>';if(f.iban)h+='<span class="f-badge fb-grey">'+f.iban+'</span>';h+='<span class="f-badge '+(f.scope==='family'?'fb-sage':'fb-grey')+'">'+(f.scope==='family'?'Famille':'Personnel')+'</span></div>';if(f.photo)h+='<button class="dl-btn" id="dl-fac-btn" type="button">Telecharger / Partager</button>';h+='<div style="display:flex;flex-direction:column;gap:8px;" id="fac-actions"></div>';gid('df-body').innerHTML=h;
+  // Charger la photo via API GitHub pour éviter les problèmes CORS
+  if(f.photo&&GH_TOKEN){
+    var photoFilename=f.photo.split('/photos/')[1];
+    if(photoFilename){
+      var photoApi='https://api.github.com/repos/'+GH_OWNER+'/'+GH_REPO+'/contents/photos/'+photoFilename;
+      fetch(photoApi,{headers:ghH()})
+        .then(function(r){return r.ok?r.json():null;})
+        .then(function(j){
+          var wrap=document.getElementById('fac-photo-wrap');
+          if(!wrap)return;
+          if(j&&j.content){
+            var ext=photoFilename.split('.').pop().toLowerCase();
+            var mime=ext==='jpg'||ext==='jpeg'?'image/jpeg':'image/png';
+            var src='data:'+mime+';base64,'+j.content.replace(/\n/g,'');
+            wrap.innerHTML='<img src="'+src+'" class="fac-photo" alt="Facture"/>';
+          } else {
+            wrap.innerHTML='';
+          }
+        }).catch(function(){
+          var wrap=document.getElementById('fac-photo-wrap');
+          if(wrap)wrap.innerHTML='';
+        });
+    }
+  } else if(f.photo){
+    // URL directe (fallback)
+    var wrap=document.getElementById('fac-photo-wrap');
+    if(wrap)wrap.innerHTML='<img src="'+f.photo+'" class="fac-photo" alt="Facture" onerror="this.parentNode.innerHTML=\'\'" />';
+  }if(f.photo){gid('dl-fac-btn').addEventListener('click',function(){downloadFac(id);});}var actions=gid('fac-actions');if(!f.paid){var pb=mkEl('button',{className:'btn btn-sage',type:'button',textContent:'Marquer comme payee'});pb.addEventListener('click',function(e){markPaid(id,e);});actions.appendChild(pb);}else{var ub=mkEl('button',{className:'btn btn-outline',type:'button',textContent:'Annuler le paiement'});ub.addEventListener('click',function(){markUnpaid(id);});actions.appendChild(ub);}var eb=mkEl('button',{className:'btn btn-outline',type:'button',textContent:'Modifier'});eb.addEventListener('click',function(){closeSheet('sheet-df');setTimeout(function(){openAddFac(curFacId);},320);});actions.appendChild(eb);var db=mkEl('button',{className:'btn btn-outline',type:'button',textContent:'Dupliquer'});db.addEventListener('click',function(){closeSheet('sheet-df');duplicateFac(id);});actions.appendChild(db);openSheet('sheet-df');};
 
 
 window.openChargeAction=function(id){
