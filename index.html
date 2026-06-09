@@ -543,7 +543,40 @@ html,body{height:100%;background:var(--ivory);color:var(--ink);font-family:var(-
 
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jsqr/1.4.0/jsQR.min.js"></script>
-<script>
+<script>function parseQRData(raw){
+  // Extraire uniquement CHF + montant du texte QR suisse
+  var result={};
+  var lines=raw.replace(/\r/g,'').split('\n');
+  if(lines[0]==='SPC'){
+    // IBAN ligne 3
+    if(lines[3])result.iban=lines[3].trim();
+    // Emetteur ligne 5
+    if(lines[5])result.emetteur=lines[5].trim();
+    // Chercher CHF suivi du montant
+    for(var i=0;i<lines.length;i++){
+      if(lines[i].trim()==='CHF'&&lines[i+1]){
+        var m=parseFloat(lines[i+1].trim());
+        if(m>0){result.montant=m;break;}
+      }
+    }
+    // Référence: après QRR ou NON
+    for(var j=0;j<lines.length;j++){
+      var t=lines[j].trim();
+      if((t==='QRR'||t==='NON'||t.indexOf('NON QRCH')===0)&&lines[j+1]){
+        var ref=lines[j+1].trim();
+        if(ref.length>4)result.ref=ref;
+        break;
+      }
+    }
+  } else {
+    // QR non-SPC: chercher CHF XX.XX n'importe où dans le texte
+    var match=raw.match(/CHF\s*([0-9]+[.,][0-9]{2})/i);
+    if(match)result.montant=parseFloat(match[1].replace(',','.'));
+  }
+  return result;
+}
+
+
 
 var GH_OWNER='Loulisse',GH_REPO='aurora-budget',GH_FILE='family-data.json';
 var GH_API='https://api.github.com/repos/'+GH_OWNER+'/'+GH_REPO+'/contents/'+GH_FILE;
@@ -1513,40 +1546,24 @@ function capturePhotoStep1(qrData){
 
 function handleFileStep1(e){
   var file=e.target.files[0];if(!file)return;
+  if(!file.type.startsWith('image/')){
+    currentPhoto=null;
+    renderFacStep2(null,null);
+    return;
+  }
   var reader=new FileReader();
   reader.onload=function(ev){
-    if(!file.type.startsWith('image/')){
-      currentPhoto=null;
-      renderFacStep2(null,null);
-      return;
-    }
+    // Compresser la photo (max 900px) puis aller directement à l'étape 2
     var img=new Image();
     img.onload=function(){
-      // 1. Compresser la photo (max 900px) pour stocker
       var MAX=900;
       var scale=Math.min(1,MAX/Math.max(img.width||1,img.height||1));
-      var cw=Math.round((img.width||MAX)*scale);
-      var ch=Math.round((img.height||MAX)*scale);
       var cv=document.createElement('canvas');
-      cv.width=cw;cv.height=ch;
-      cv.getContext('2d').drawImage(img,0,0,cw,ch);
-      currentPhoto=cv.toDataURL('image/jpeg',0.72);
-
-      // 2. Tenter QR sur version encore plus petite (max 600px)
-      var qrData=null;
-      try{
-        if(typeof jsQR!=='undefined'){
-          var QS=Math.min(1,600/Math.max(cw,ch));
-          var qw=Math.round(cw*QS),qh=Math.round(ch*QS);
-          var cq=document.createElement('canvas');cq.width=qw;cq.height=qh;
-          cq.getContext('2d').drawImage(cv,0,0,qw,qh);
-          var px=cq.getContext('2d').getImageData(0,0,qw,qh);
-          var res=jsQR(px.data,qw,qh,{inversionAttempts:'dontInvert'});
-          if(res)qrData=res.data;
-        }
-      }catch(err){}
-
-      renderFacStep2(null, qrData?parseQRData(qrData):null);
+      cv.width=Math.round((img.width||MAX)*scale);
+      cv.height=Math.round((img.height||MAX)*scale);
+      cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);
+      currentPhoto=cv.toDataURL('image/jpeg',0.75);
+      renderFacStep2(null,null);
     };
     img.onerror=function(){currentPhoto=null;renderFacStep2(null,null);};
     img.src=ev.target.result;
@@ -1554,6 +1571,7 @@ function handleFileStep1(e){
   reader.onerror=function(){currentPhoto=null;renderFacStep2(null,null);};
   reader.readAsDataURL(file);
 }
+
 
 function parseQRData(raw){
   var lines=raw.replace(/\r/g,'').split('\n');
