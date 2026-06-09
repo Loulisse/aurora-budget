@@ -351,6 +351,7 @@ html,body{height:100%;background:var(--ivory);color:var(--ink);font-family:var(-
   <button class="fab" id="fab-main" onclick="toggleFab()">+</button>
   <div class="fab-menu" id="fab-menu">
     <div class="fab-menu-item" onclick="closeFab();openAddIncome(null)"><div class="fab-menu-label">Entree d argent</div><div class="fab-menu-icon">&#128184;</div></div>
+    <div class="fab-menu-item" onclick="closeFab();openAddDepense()"><div class="fab-menu-label">Depense directe</div><div class="fab-menu-icon">&#128717;</div></div>
     <div class="fab-menu-item" onclick="closeFab();openAddFac(null)"><div class="fab-menu-label">Nouvelle facture</div><div class="fab-menu-icon">&#128196;</div></div>
     <div class="fab-menu-item" onclick="closeFab();openAddCharge(null)"><div class="fab-menu-label">Charge fixe</div><div class="fab-menu-icon">&#128257;</div></div>
     <div class="fab-menu-item" onclick="closeFab();openAddBocal(null)"><div class="fab-menu-label">Bocal epargne</div><div class="fab-menu-icon">&#128055;</div></div>
@@ -378,6 +379,34 @@ html,body{height:100%;background:var(--ivory);color:var(--ink);font-family:var(-
       <div class="f-group"><label class="f-label">Token sync GitHub</label><div id="token-area"></div></div>
       <button class="btn btn-ink" onclick="saveProfile()" style="margin-bottom:10px;" type="button">Enregistrer</button>
       <button class="btn btn-danger" onclick="doSignOut()" type="button">Se deconnecter</button>
+    </div>
+  </div>
+</div>
+
+<div class="sheet-overlay" id="sheet-add-depense">
+  <div class="sheet"><div class="sheet-pill"></div>
+    <div class="sheet-header"><div class="sheet-title">Dépense</div><button class="sheet-close" onclick="closeSheet('sheet-add-depense')">x</button></div>
+    <div class="sheet-body">
+      <div class="f-group"><label class="f-label">Titre</label>
+        <input class="f-input" type="text" id="dep-nom" placeholder="Courses, restaurant, essence..."/></div>
+      <div class="f-group"><label class="f-label">Montant (CHF)</label>
+        <input class="f-input" type="number" id="dep-montant" placeholder="0.00" inputmode="decimal" step="0.01"/></div>
+      <div class="f-group"><label class="f-label">Catégorie</label>
+        <select class="f-select" id="dep-cat">
+          <option value="courses">Courses / Alimentation</option>
+          <option value="restaurant">Restaurant / Café</option>
+          <option value="transport">Transport</option>
+          <option value="shopping">Shopping</option>
+          <option value="loisirs">Loisirs</option>
+          <option value="sante">Santé</option>
+          <option value="autre">Autre</option>
+        </select></div>
+      <div class="f-group"><label class="f-label">Visibilité</label>
+        <div class="scope-toggle">
+          <button class="scope-btn ap" id="dep-sp" onclick="setScope('dep','personal')" type="button">Personnel</button>
+          <button class="scope-btn" id="dep-sf" onclick="setScope('dep','family')" type="button">Famille</button>
+        </div></div>
+      <button class="btn btn-ink" onclick="saveDepense()" type="button" style="margin-top:4px;">Enregistrer</button>
     </div>
   </div>
 </div>
@@ -519,9 +548,9 @@ html,body{height:100%;background:var(--ivory);color:var(--ink);font-family:var(-
 var GH_OWNER='Loulisse',GH_REPO='aurora-budget',GH_FILE='family-data.json';
 var GH_API='https://api.github.com/repos/'+GH_OWNER+'/'+GH_REPO+'/contents/'+GH_FILE;
 var LS='aurora_v8';
-var S={prenom:'',sexe:'',dateNaissance:'',familyId:null,couleur:'#5C7A5F',membres:[],incomes:[],factures:[],charges:[],bocaux:[],virements:[],lastMonth:null,currentMonth:null};
+var S={prenom:'',sexe:'',dateNaissance:'',familyId:null,couleur:'#5C7A5F',membres:[],incomes:[],factures:[],charges:[],bocaux:[],depenses:[],virements:[],lastMonth:null,currentMonth:null};
 var GH_TOKEN='';
-var selPrio=3,scopes={inc:'personal',fac:'personal',ch:'personal',boc:'personal'};
+var selPrio=3,scopes={inc:'personal',fac:'personal',ch:'personal',boc:'personal',dep:'personal'};
 var facFilter='urgent',fabOpen=false,payTab='todo',bilanTab='perso';
 var camStream=null,scanTick=null,currentPhoto=null;
 var curFacId=null,curBocId=null,syncTimer=null;
@@ -814,7 +843,7 @@ window.joinFromProfile=function(){var c=gid('p-join').value.trim().toUpperCase()
 window.saveToken=function(){var inp=gid('token-inp');if(!inp||!inp.value.trim()){toast('Entrez le token','e');return;}GH_TOKEN=inp.value.trim();localStorage.setItem('aurora_gh_token',GH_TOKEN);renderProfile();syncFam();toast('Sync activee');};
 window.removeToken=function(){GH_TOKEN='';localStorage.removeItem('aurora_gh_token');renderProfile();toast('Token supprime');};
 
-function calcCap(){return S.incomes.reduce(function(a,i){return a+(+i.amount||0);},0)-S.factures.filter(function(f){return f.paid;}).reduce(function(a,f){return a+(+f.montant||0);},0)-S.bocaux.reduce(function(a,b){return a+(+b.actuel||0);},0);}
+function calcCap(){return S.incomes.reduce(function(a,i){return a+(+i.amount||0);},0)-S.factures.filter(function(f){return f.paid;}).reduce(function(a,f){return a+(+f.montant||0);},0)-S.bocaux.reduce(function(a,b){return a+(+b.actuel||0);},0)-(S.depenses||[]).reduce(function(a,d){return a+(+d.montant||0);},0);}
 function calcDues(){return S.factures.filter(function(f){return !f.paid;}).reduce(function(a,f){return a+(+f.montant||0);},0);}
 function calcFixed(){var m={monthly:1,bimonthly:.5,quarterly:1/3,yearly:1/12};return S.charges.reduce(function(a,c){return a+(+c.montant||0)*(m[c.freq]||1);},0);}
 
@@ -1012,6 +1041,25 @@ function renderBilanPerso(cont){
   grid2.appendChild(catCard('&#128257;','Charges/mois',charges,'var(--terra)',function(){switchTab('charges',gid('nav-charges'));}));
   grid2.appendChild(catCard('&#129412;','Épargne',bocaux,'var(--blue)',function(){switchTab('epargne',gid('nav-epargne'));}));
   cont.appendChild(grid2);
+
+  // ── DERNIÈRES DÉPENSES ──
+  if(S.depenses&&S.depenses.length){
+    var depSorted=(S.depenses||[]).slice().sort(function(a,b){return (b.date||'').localeCompare(a.date||'');}).slice(0,5);
+    var dhd=document.createElement('div');dhd.className='sec-hd';
+    dhd.innerHTML='<div class="sec-title">Dernieres depenses</div>';
+    var dadd=document.createElement('button');dadd.className='sec-link';dadd.type='button';dadd.textContent='+ Ajouter';
+    dadd.addEventListener('click',function(){openAddDepense();});
+    dhd.appendChild(dadd);cont.appendChild(dhd);
+    depSorted.forEach(function(d){
+      var el=document.createElement('div');el.className='income-item';
+      el.style.cursor='default';
+      el.innerHTML='<div class="income-icon" style="background:var(--red-l);">'+(DEP_ICONS[d.cat]||'&#128230;')+'</div>'
+        +'<div class="income-body"><div class="income-name">'+d.nom+'</div>'
+        +'<div class="income-date">'+fmtD(d.date)+(d.scope==='family'?' · Famille':'')+'</div></div>'
+        +'<div class="income-amount" style="color:var(--red);">-'+fmt(d.montant)+'</div>';
+      cont.appendChild(el);
+    });
+  }
 
   // ── GRAPHIQUE ──
   var history=buildCapitalHistory();
@@ -2563,6 +2611,36 @@ window.duplicateFac=function(id){
   overlay.appendChild(sheet);
   document.body.appendChild(overlay);
 };
+
+var DEP_ICONS={courses:'&#127857;',restaurant:'&#127829;',transport:'&#128664;',shopping:'&#128717;',loisirs:'&#127916;',sante:'&#128138;',autre:'&#128230;'};
+
+window.openAddDepense=function(){
+  var el=document.getElementById('dep-nom');if(el)el.value='';
+  var el2=document.getElementById('dep-montant');if(el2)el2.value='';
+  var el3=document.getElementById('dep-cat');if(el3)el3.value='courses';
+  setScope('dep','personal');
+  openSheet('sheet-add-depense');
+  setTimeout(function(){var n=document.getElementById('dep-nom');if(n)n.focus();},300);
+};
+
+window.saveDepense=function(){
+  var nom=(document.getElementById('dep-nom')||{value:''}).value.trim();
+  if(!nom){toast('Entrez un titre','e');return;}
+  var m=parseFloat((document.getElementById('dep-montant')||{value:''}).value)||0;
+  if(!m){toast('Entrez un montant','e');return;}
+  var cat=(document.getElementById('dep-cat')||{value:'autre'}).value;
+  if(!S.depenses)S.depenses=[];
+  S.depenses.push({
+    id:'d'+uid(), nom:nom, montant:m,
+    cat:cat, scope:scopes.dep,
+    date:today(), paid:true
+  });
+  save();schedSync();
+  closeSheet('sheet-add-depense');
+  toast('-'+fmt(m)+' — '+nom);
+  renderBilan();
+};
+
 window.onload=function(){
   load();
   gid('btn-login').addEventListener('click',doLogin);
