@@ -2408,7 +2408,7 @@ function doPrevMonth(){
 }
 
 
-window.openFacDetail=function(id){var f=S.factures.find(function(x){return x.id===id;});if(!f)return;curFacId=id;gid('df-title').textContent=f.nom;var h='';if(f.photo)h+='<img src="'+f.photo+'" class="fac-photo" alt=""/>';h+='<div class="metric-row"><div class="metric"><div class="metric-val">'+fmt(f.montant)+'</div><div class="metric-lbl">Montant</div></div><div class="metric"><div class="metric-val" style="font-size:1.1rem;">'+fmtD(f.echeance)+'</div><div class="metric-lbl">Echeance</div></div></div>';h+='<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;">'+pBadge(f);if(f.ref)h+='<span class="f-badge fb-grey">Ref: '+f.ref+'</span>';if(f.iban)h+='<span class="f-badge fb-grey">'+f.iban+'</span>';h+='<span class="f-badge '+(f.scope==='family'?'fb-sage':'fb-grey')+'">'+(f.scope==='family'?'Famille':'Personnel')+'</span></div>';if(f.photo)h+='<button class="dl-btn" id="dl-fac-btn" type="button">Telecharger / Partager</button>';h+='<div style="display:flex;flex-direction:column;gap:8px;" id="fac-actions"></div>';gid('df-body').innerHTML=h;if(f.photo){gid('dl-fac-btn').addEventListener('click',function(){downloadFac(id);});}var actions=gid('fac-actions');if(!f.paid){var pb=mkEl('button',{className:'btn btn-sage',type:'button',textContent:'Marquer comme payee'});pb.addEventListener('click',function(e){markPaid(id,e);});actions.appendChild(pb);}else{var ub=mkEl('button',{className:'btn btn-outline',type:'button',textContent:'Annuler le paiement'});ub.addEventListener('click',function(){markUnpaid(id);});actions.appendChild(ub);}var eb=mkEl('button',{className:'btn btn-outline',type:'button',textContent:'Modifier'});eb.addEventListener('click',function(){closeSheet('sheet-df');setTimeout(function(){openAddFac(curFacId);},320);});actions.appendChild(eb);var db=mkEl('button',{className:'btn btn-outline',type:'button',textContent:'Dupliquer'});db.addEventListener('click',function(){closeSheet('sheet-df');duplicateFac(id);});actions.appendChild(db);openSheet('sheet-df');};
+window.openFacDetail=function(id){var f=S.factures.find(function(x){return x.id===id;});if(!f)return;curFacId=id;gid('df-title').textContent=f.nom;var h='';if(f.photo)h+='<img src="'+f.photo+'" class="fac-photo" alt="" onerror="this.style.display=\'none\'"/>';h+='<div class="metric-row"><div class="metric"><div class="metric-val">'+fmt(f.montant)+'</div><div class="metric-lbl">Montant</div></div><div class="metric"><div class="metric-val" style="font-size:1.1rem;">'+fmtD(f.echeance)+'</div><div class="metric-lbl">Echeance</div></div></div>';h+='<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;">'+pBadge(f);if(f.ref)h+='<span class="f-badge fb-grey">Ref: '+f.ref+'</span>';if(f.iban)h+='<span class="f-badge fb-grey">'+f.iban+'</span>';h+='<span class="f-badge '+(f.scope==='family'?'fb-sage':'fb-grey')+'">'+(f.scope==='family'?'Famille':'Personnel')+'</span></div>';if(f.photo)h+='<button class="dl-btn" id="dl-fac-btn" type="button">Telecharger / Partager</button>';h+='<div style="display:flex;flex-direction:column;gap:8px;" id="fac-actions"></div>';gid('df-body').innerHTML=h;if(f.photo){gid('dl-fac-btn').addEventListener('click',function(){downloadFac(id);});}var actions=gid('fac-actions');if(!f.paid){var pb=mkEl('button',{className:'btn btn-sage',type:'button',textContent:'Marquer comme payee'});pb.addEventListener('click',function(e){markPaid(id,e);});actions.appendChild(pb);}else{var ub=mkEl('button',{className:'btn btn-outline',type:'button',textContent:'Annuler le paiement'});ub.addEventListener('click',function(){markUnpaid(id);});actions.appendChild(ub);}var eb=mkEl('button',{className:'btn btn-outline',type:'button',textContent:'Modifier'});eb.addEventListener('click',function(){closeSheet('sheet-df');setTimeout(function(){openAddFac(curFacId);},320);});actions.appendChild(eb);var db=mkEl('button',{className:'btn btn-outline',type:'button',textContent:'Dupliquer'});db.addEventListener('click',function(){closeSheet('sheet-df');duplicateFac(id);});actions.appendChild(db);openSheet('sheet-df');};
 
 
 window.openChargeAction=function(id){
@@ -2693,11 +2693,11 @@ function uploadPhotoGH(dataUrl, filename, cb){
     })
     .then(function(r){return r.ok?r.json():null;})
     .then(function(j){
-      if(j&&j.content&&j.content.download_url){
-        cb(j.content.download_url);
+      if(j&&j.content&&j.content.name){
+        cb('https://cdn.jsdelivr.net/gh/'+GH_OWNER+'/'+GH_REPO+'@main/photos/'+j.content.name);
       } else {
-        // Construire l'URL raw manuellement
-        cb('https://raw.githubusercontent.com/'+GH_OWNER+'/'+GH_REPO+'/main/photos/'+filename);
+        // Utiliser jsDelivr CDN (CORS-friendly, sert les assets GitHub correctement)
+        cb('https://cdn.jsdelivr.net/gh/'+GH_OWNER+'/'+GH_REPO+'@main/photos/'+filename);
       }
     })
     .catch(function(){cb(null);});
