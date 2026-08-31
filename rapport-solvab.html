@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<title>Aurora — Rapport Budget Solvab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Instrument+Serif:ital@0;1&display=swap"/>
+<style>
+/* ══════════════════════════════════════════════
+   APP UI STYLES (écran)
+══════════════════════════════════════════════ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --ivory:#FAFAF7; --ivory2:#F3F2ED; --ivory3:#EAE9E2;
+  --ink:#1C1B18; --ink2:#4A4840; --ink3:#8C8A82;
+  --sage:#5C7A5F; --sage-l:#EBF0EB;
+  --terra:#C4622D; --terra-l:#FAF0EB;
+  --gold:#C9943A; --gold-l:#FDF6E8;
+  --red:#C4393B; --red-l:#FAEAEA;
+  --border:rgba(28,27,24,.1);
+  --r:16px; --r-sm:10px;
+  --sans:'Plus Jakarta Sans',sans-serif;
+  --serif:'Instrument Serif',serif;
+}
+html,body{background:var(--ivory);color:var(--ink);font-family:var(--sans);min-height:100vh;-webkit-font-smoothing:antialiased;}
+
+.app-shell{max-width:640px;margin:0 auto;padding:24px 16px 80px;}
+
+/* Header */
+.app-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;}
+.app-logo{font-family:var(--serif);font-size:1.5rem;letter-spacing:-.02em;}
+.app-logo span{color:var(--sage);}
+.app-subtitle{font-size:.7rem;text-transform:uppercase;letter-spacing:.12em;color:var(--ink3);margin-top:2px;}
+
+/* Section */
+.section{background:#fff;border:1.5px solid var(--border);border-radius:var(--r);padding:20px;margin-bottom:16px;box-shadow:0 1px 4px rgba(0,0,0,.05);}
+.section-title{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--ink3);margin-bottom:14px;display:flex;align-items:center;gap:6px;}
+
+/* Rows */
+.row{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.row:last-child{margin-bottom:0;}
+.row-label{flex:1;font-size:.88rem;font-weight:500;color:var(--ink);}
+.row-freq{font-size:.72rem;color:var(--ink3);white-space:nowrap;}
+
+input[type=text],input[type=number],select{
+  background:var(--ivory2);border:1.5px solid var(--border);border-radius:var(--r-sm);
+  color:var(--ink);font-family:var(--sans);font-size:.88rem;padding:9px 12px;outline:none;
+  -webkit-appearance:none;transition:border-color .2s;
+}
+input[type=text]:focus,input[type=number]:focus,select:focus{border-color:var(--sage);}
+input.w-name{flex:1;}
+input.w-amount{width:100px;text-align:right;font-weight:600;}
+select.w-freq{width:130px;font-size:.78rem;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath fill='%238C8A82' d='M5 7L0 2h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px;}
+
+.btn-add-row{display:flex;align-items:center;gap:6px;margin-top:12px;padding:8px 0;
+  font-size:.78rem;font-weight:600;color:var(--sage);background:none;border:none;
+  cursor:pointer;font-family:var(--sans);}
+.btn-del{width:28px;height:28px;border-radius:50%;background:var(--ivory3);border:none;
+  display:flex;align-items:center;justify-content:center;font-size:.9rem;cursor:pointer;
+  color:var(--ink3);flex-shrink:0;transition:all .15s;}
+.btn-del:hover{background:var(--red-l);color:var(--red);}
+
+/* Info identité */
+.id-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.id-field label{display:block;font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--ink3);margin-bottom:5px;}
+.id-field input{width:100%;}
+
+/* Summary bar */
+.summary-bar{background:var(--ink);border-radius:var(--r);padding:20px;margin-bottom:16px;}
+.sum-title{font-size:.65rem;text-transform:uppercase;letter-spacing:.12em;color:rgba(255,255,255,.45);margin-bottom:12px;}
+.sum-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+.sum-item{}
+.sum-val{font-family:var(--serif);font-size:1.4rem;color:#fff;letter-spacing:-.02em;}
+.sum-lbl{font-size:.6rem;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.4);margin-top:2px;}
+.sum-val.positive{color:#9FD4A3;}
+.sum-val.negative{color:#F4A28C;}
+
+/* Factures importées */
+.fac-imported{background:var(--sage-l);border-radius:var(--r-sm);padding:10px 14px;margin-bottom:6px;
+  display:flex;justify-content:space-between;align-items:center;}
+.fac-name{font-size:.85rem;font-weight:600;}
+.fac-detail{font-size:.7rem;color:var(--ink3);}
+.fac-amount{font-weight:700;font-size:.88rem;white-space:nowrap;}
+
+/* Generate button */
+.btn-generate{
+  width:100%;padding:16px;background:var(--sage);color:#fff;border:none;
+  border-radius:var(--r);font-family:var(--sans);font-weight:700;font-size:1rem;
+  cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:10px;
+  box-shadow:0 4px 20px rgba(92,122,95,.3);
+}
+.btn-generate:active{transform:scale(.97);}
+.btn-clear{
+  width:100%;padding:12px;background:transparent;border:1.5px solid var(--border);
+  border-radius:var(--r-sm);font-family:var(--sans);font-weight:600;font-size:.85rem;
+  cursor:pointer;color:var(--ink3);margin-top:8px;
+}
+
+.info-box{background:var(--gold-l);border:1.5px solid var(--gold);border-radius:var(--r-sm);
+  padding:12px 14px;margin-bottom:16px;font-size:.82rem;line-height:1.5;color:var(--ink2);}
+
+/* ══════════════════════════════════════════════
+   PDF / PRINT STYLES
+══════════════════════════════════════════════ */
+@media print {
+  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+
+  body { background: white !important; font-family: 'Plus Jakarta Sans', sans-serif; }
+  .app-shell, .no-print { display: none !important; }
+  #pdf-output { display: block !important; }
+
+  @page {
+    size: A4;
+    margin: 18mm 16mm 16mm;
+  }
+}
+
+/* PDF output (hidden on screen, shown on print) */
+#pdf-output {
+  display: none;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  color: #1C1B18;
+  font-size: 9.5pt;
+  line-height: 1.45;
+}
+
+/* ── PDF layout ── */
+.pdf-page { max-width: 180mm; margin: 0 auto; }
+
+.pdf-header {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  border-bottom: 2px solid #1C1B18; padding-bottom: 12pt; margin-bottom: 18pt;
+}
+.pdf-logo { font-family: 'Instrument Serif', serif; font-size: 22pt; letter-spacing: -.02em; }
+.pdf-logo-sub { font-size: 7pt; text-transform: uppercase; letter-spacing: .12em; color: #8C8A82; margin-top: 2pt; }
+.pdf-header-right { text-align: right; font-size: 8pt; color: #4A4840; line-height: 1.6; }
+.pdf-header-right strong { font-size: 9.5pt; color: #1C1B18; }
+
+.pdf-title-block { margin-bottom: 18pt; }
+.pdf-doc-title { font-size: 14pt; font-weight: 700; letter-spacing: -.02em; margin-bottom: 3pt; }
+.pdf-doc-sub { font-size: 8pt; color: #8C8A82; text-transform: uppercase; letter-spacing: .1em; }
+
+/* Identity */
+.pdf-identity { display: grid; grid-template-columns: 1fr 1fr; gap: 10pt; margin-bottom: 18pt; }
+.pdf-id-box { background: #F3F2ED; border-radius: 6pt; padding: 10pt 12pt; }
+.pdf-id-label { font-size: 7pt; text-transform: uppercase; letter-spacing: .1em; color: #8C8A82; margin-bottom: 3pt; font-weight: 700; }
+.pdf-id-value { font-size: 9.5pt; font-weight: 600; }
+
+/* Section */
+.pdf-section { margin-bottom: 16pt; }
+.pdf-section-title {
+  font-size: 7.5pt; font-weight: 700; text-transform: uppercase; letter-spacing: .12em;
+  color: #5C7A5F; border-bottom: 1px solid #EAE9E2; padding-bottom: 5pt; margin-bottom: 8pt;
+}
+
+/* Table */
+.pdf-table { width: 100%; border-collapse: collapse; }
+.pdf-table th {
+  font-size: 7pt; text-transform: uppercase; letter-spacing: .08em;
+  color: #8C8A82; text-align: left; padding: 4pt 8pt; font-weight: 700;
+  background: #F3F2ED;
+}
+.pdf-table th.right, .pdf-table td.right { text-align: right; }
+.pdf-table td { padding: 6pt 8pt; font-size: 9pt; border-bottom: 1px solid #EAE9E2; }
+.pdf-table tr:last-child td { border-bottom: none; }
+.pdf-table tr:nth-child(even) td { background: #FAFAF7; }
+.pdf-table .total-row td {
+  font-weight: 700; font-size: 9.5pt; border-top: 1.5px solid #1C1B18;
+  border-bottom: none; padding-top: 7pt;
+}
+.pdf-table .amount { font-weight: 600; white-space: nowrap; }
+.pdf-table .freq-badge {
+  font-size: 6.5pt; padding: 1.5pt 5pt; border-radius: 10pt;
+  background: #EAE9E2; color: #4A4840; font-weight: 600;
+}
+.pdf-table .prio-badge {
+  font-size: 6.5pt; padding: 1.5pt 5pt; border-radius: 10pt; font-weight: 700;
+}
+.pdf-table .p1{background:#FAEAEA;color:#C4393B;}
+.pdf-table .p2{background:#FAF0EB;color:#C4622D;}
+.pdf-table .p3{background:#FDF6E8;color:#C9943A;}
+.pdf-table .p4{background:#EAE9E2;color:#8C8A82;}
+
+/* Summary box */
+.pdf-summary {
+  border: 2px solid #1C1B18; border-radius: 8pt; padding: 14pt 16pt;
+  margin-top: 18pt; margin-bottom: 16pt;
+}
+.pdf-summary-title { font-size: 8pt; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; margin-bottom: 12pt; color: #8C8A82; }
+.pdf-summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10pt; margin-bottom: 12pt; }
+.pdf-sum-item { }
+.pdf-sum-val { font-family: 'Instrument Serif', serif; font-size: 15pt; letter-spacing: -.02em; margin-bottom: 2pt; }
+.pdf-sum-lbl { font-size: 7pt; text-transform: uppercase; letter-spacing: .08em; color: #8C8A82; font-weight: 700; }
+.pdf-sum-divider { border-top: 1px solid #EAE9E2; padding-top: 12pt; }
+.pdf-disponible-row { display: flex; justify-content: space-between; align-items: baseline; }
+.pdf-disponible-label { font-size: 9pt; font-weight: 700; }
+.pdf-disponible-amount { font-family: 'Instrument Serif', serif; font-size: 20pt; letter-spacing: -.02em; }
+.pdf-disponible-amount.positive { color: #5C7A5F; }
+.pdf-disponible-amount.negative { color: #C4393B; }
+.pdf-dispo-sub { font-size: 7.5pt; color: #8C8A82; margin-top: 4pt; }
+
+/* Remark area */
+.pdf-remark { background: #F3F2ED; border-radius: 6pt; padding: 10pt 12pt; margin-bottom: 16pt; }
+.pdf-remark-title { font-size: 7pt; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: #8C8A82; margin-bottom: 6pt; }
+.pdf-remark-content { font-size: 8.5pt; line-height: 1.6; color: #4A4840; }
+.pdf-remark-lines { margin-top: 6pt; }
+.pdf-remark-line { border-bottom: 1px solid #C8C6BF; height: 16pt; margin-bottom: 2pt; }
+
+/* Footer */
+.pdf-footer {
+  border-top: 1px solid #EAE9E2; padding-top: 8pt; margin-top: 20pt;
+  display: flex; justify-content: space-between; font-size: 7pt; color: #8C8A82;
+}
+.pdf-confidential {
+  background: #1C1B18; color: white; font-size: 6.5pt; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .1em; padding: 3pt 8pt;
+  border-radius: 4pt; display: inline-block; margin-bottom: 12pt;
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════
+     APP UI (écran)
+══════════════════════════════════════════ -->
+<div class="app-shell no-print">
+
+  <div class="app-header">
+    <div>
+      <div class="app-logo">✦ <span>Aurora</span></div>
+      <div class="app-subtitle">Rapport budgétaire · Solvab.ch</div>
+    </div>
+    <div style="font-size:.75rem;color:var(--ink3);" id="date-display"></div>
+  </div>
+
+  <div class="info-box">
+    💡 Ce rapport est destiné à votre rendez-vous avec <strong>Solvab.ch</strong>.
+    Remplissez les informations ci-dessous, puis appuyez sur <strong>Générer le PDF</strong>.
+    Les factures déjà enregistrées dans Aurora sont importées automatiquement.
+  </div>
+
+  <!-- ── IDENTITÉ ── -->
+  <div class="section">
+    <div class="section-title">👤 Identité du foyer</div>
+    <div class="id-grid">
+      <div class="id-field"><label>Votre prénom & nom</label><input type="text" id="id-nom1" placeholder="Jean Dupont"/></div>
+      <div class="id-field"><label>Prénom & nom conjoint·e</label><input type="text" id="id-nom2" placeholder="Marie Dupont"/></div>
+      <div class="id-field"><label>Adresse</label><input type="text" id="id-adresse" placeholder="Rue des Fleurs 12"/></div>
+      <div class="id-field"><label>NPA & Ville</label><input type="text" id="id-ville" placeholder="1000 Lausanne"/></div>
+      <div class="id-field"><label>Téléphone</label><input type="text" id="id-tel" placeholder="079 000 00 00"/></div>
+      <div class="id-field"><label>Email</label><input type="text" id="id-email" placeholder="famille@email.ch"/></div>
+    </div>
+  </div>
+
+  <!-- ── REVENUS FIXES ── -->
+  <div class="section">
+    <div class="section-title">💸 Revenus fixes mensuels</div>
+    <div id="revenus-rows"></div>
+    <button class="btn-add-row" onclick="addRow('revenus')">＋ Ajouter un revenu</button>
+  </div>
+
+  <!-- ── CHARGES FIXES ── -->
+  <div class="section">
+    <div class="section-title">🔁 Charges fixes & abonnements</div>
+    <div id="charges-rows"></div>
+    <button class="btn-add-row" onclick="addRow('charges')">＋ Ajouter une charge</button>
+  </div>
+
+  <!-- ── BUDGET VIE COURANTE ── -->
+  <div class="section">
+    <div class="section-title">🛒 Budget vie courante (mensuel estimé)</div>
+    <div id="vie-rows"></div>
+    <button class="btn-add-row" onclick="addRow('vie')">＋ Ajouter un poste</button>
+  </div>
+
+  <!-- ── FACTURES EN COURS (depuis Aurora) ── -->
+  <div class="section">
+    <div class="section-title">📋 Factures en cours (depuis Aurora)</div>
+    <div id="factures-imported">
+      <div style="font-size:.82rem;color:var(--ink3);padding:8px 0;">
+        Chargement depuis Aurora…
+        <br/><small>Si vous n'avez pas de données Aurora, vous pouvez ajouter des factures manuellement ci-dessous.</small>
+      </div>
+    </div>
+    <div id="factures-manual-rows"></div>
+    <button class="btn-add-row" onclick="addRow('factures-manual')">＋ Ajouter une facture manuellement</button>
+  </div>
+
+  <!-- ── REMARQUES ── -->
+  <div class="section">
+    <div class="section-title">📝 Contexte & remarques pour Solvab</div>
+    <textarea class="f-textarea" id="remarques" rows="5" style="width:100%;resize:vertical;background:var(--ivory2);border:1.5px solid var(--border);border-radius:var(--r-sm);font-family:var(--sans);font-size:.88rem;padding:10px 12px;color:var(--ink);outline:none;"
+      placeholder="Décrivez brièvement votre situation : type de dettes, événement déclencheur, objectifs…"></textarea>
+  </div>
+
+  <!-- ── RÉSUMÉ DYNAMIQUE ── -->
+  <div class="summary-bar" id="summary-bar">
+    <div class="sum-title">Résumé en temps réel</div>
+    <div class="sum-grid">
+      <div class="sum-item"><div class="sum-val positive" id="sum-revenus">CHF 0.00</div><div class="sum-lbl">Revenus/mois</div></div>
+      <div class="sum-item"><div class="sum-val" id="sum-charges" style="color:rgba(255,255,255,.7)">CHF 0.00</div><div class="sum-lbl">Charges/mois</div></div>
+      <div class="sum-item"><div class="sum-val" id="sum-disponible">CHF 0.00</div><div class="sum-lbl">Disponible</div></div>
+    </div>
+  </div>
+
+  <!-- ── BOUTONS ── -->
+  <button class="btn-generate" onclick="generatePDF()">📄 Générer le rapport PDF</button>
+  <button class="btn-clear" onclick="clearAll()">🗑 Tout effacer</button>
+
+</div><!-- /app-shell -->
+
+<!-- ══════════════════════════════════════════
+     PDF OUTPUT (caché à l'écran, imprimé)
+══════════════════════════════════════════ -->
+<div id="pdf-output">
+<div class="pdf-page">
+
+  <!-- En-tête -->
+  <div class="pdf-header">
+    <div>
+      <div class="pdf-logo">✦ Aurora</div>
+      <div class="pdf-logo-sub">Gestion budgétaire personnelle</div>
+    </div>
+    <div class="pdf-header-right">
+      <div>Document établi le <strong id="pdf-date"></strong></div>
+      <div id="pdf-contact-hdr"></div>
+      <div style="margin-top:4pt;"><span class="pdf-confidential">CONFIDENTIEL</span></div>
+    </div>
+  </div>
+
+  <!-- Titre -->
+  <div class="pdf-title-block">
+    <div class="pdf-doc-title">Bilan budgétaire familial</div>
+    <div class="pdf-doc-sub">Rapport préparé pour consultation · Solvab.ch</div>
+  </div>
+
+  <!-- Identité -->
+  <div class="pdf-identity" id="pdf-identity"></div>
+
+  <!-- Revenus -->
+  <div class="pdf-section">
+    <div class="pdf-section-title">💸 Revenus fixes mensuels</div>
+    <table class="pdf-table">
+      <thead><tr>
+        <th>Source de revenu</th>
+        <th>Fréquence</th>
+        <th class="right">Montant mensuel (CHF)</th>
+      </tr></thead>
+      <tbody id="pdf-revenus-body"></tbody>
+      <tfoot><tr class="total-row">
+        <td colspan="2">Total revenus mensuels</td>
+        <td class="right amount" id="pdf-total-revenus">0.00</td>
+      </tr></tfoot>
+    </table>
+  </div>
+
+  <!-- Charges fixes -->
+  <div class="pdf-section">
+    <div class="pdf-section-title">🔁 Charges fixes & abonnements</div>
+    <table class="pdf-table">
+      <thead><tr>
+        <th>Charge</th>
+        <th>Fréquence</th>
+        <th class="right">Coût mensuel estimé (CHF)</th>
+      </tr></thead>
+      <tbody id="pdf-charges-body"></tbody>
+      <tfoot><tr class="total-row">
+        <td colspan="2">Total charges mensuelles</td>
+        <td class="right amount" id="pdf-total-charges">0.00</td>
+      </tr></tfoot>
+    </table>
+  </div>
+
+  <!-- Budget vie courante -->
+  <div class="pdf-section">
+    <div class="pdf-section-title">🛒 Budget vie courante (mensuel)</div>
+    <table class="pdf-table">
+      <thead><tr>
+        <th>Poste</th>
+        <th class="right">Montant mensuel (CHF)</th>
+      </tr></thead>
+      <tbody id="pdf-vie-body"></tbody>
+      <tfoot><tr class="total-row">
+        <td>Total vie courante</td>
+        <td class="right amount" id="pdf-total-vie">0.00</td>
+      </tr></tfoot>
+    </table>
+  </div>
+
+  <!-- Factures en cours -->
+  <div class="pdf-section">
+    <div class="pdf-section-title">📋 Factures en cours — à régler</div>
+    <table class="pdf-table">
+      <thead><tr>
+        <th>Créancier / Émetteur</th>
+        <th>Échéance</th>
+        <th>Priorité</th>
+        <th class="right">Montant (CHF)</th>
+      </tr></thead>
+      <tbody id="pdf-factures-body"></tbody>
+      <tfoot><tr class="total-row">
+        <td colspan="3">Total factures en cours</td>
+        <td class="right amount" id="pdf-total-factures">0.00</td>
+      </tr></tfoot>
+    </table>
+  </div>
+
+  <!-- Résumé financier -->
+  <div class="pdf-summary">
+    <div class="pdf-summary-title">Résumé financier mensuel</div>
+    <div class="pdf-summary-grid">
+      <div class="pdf-sum-item">
+        <div class="pdf-sum-val" id="pdf-sum-rev" style="color:#5C7A5F">0.00</div>
+        <div class="pdf-sum-lbl">Revenus / mois</div>
+      </div>
+      <div class="pdf-sum-item">
+        <div class="pdf-sum-val" id="pdf-sum-cha" style="color:#C4622D">0.00</div>
+        <div class="pdf-sum-lbl">Charges fixes / mois</div>
+      </div>
+      <div class="pdf-sum-item">
+        <div class="pdf-sum-val" id="pdf-sum-vie2" style="color:#C9943A">0.00</div>
+        <div class="pdf-sum-lbl">Vie courante / mois</div>
+      </div>
+    </div>
+    <div class="pdf-sum-divider">
+      <div class="pdf-disponible-row">
+        <div>
+          <div class="pdf-disponible-label">Disponible mensuel estimé pour remboursement</div>
+          <div class="pdf-dispo-sub" id="pdf-dispo-sub"></div>
+        </div>
+        <div class="pdf-disponible-amount" id="pdf-disponible">0.00</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Remarques -->
+  <div class="pdf-remark" id="pdf-remark-block">
+    <div class="pdf-remark-title">📝 Contexte & remarques</div>
+    <div class="pdf-remark-content" id="pdf-remarques-text"></div>
+    <div class="pdf-remark-lines" id="pdf-remark-lines"></div>
+  </div>
+
+  <!-- Espace signature -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20pt;margin-top:16pt;">
+    <div>
+      <div style="font-size:7.5pt;color:#8C8A82;margin-bottom:20pt;">Signature du titulaire du foyer</div>
+      <div style="border-top:1px solid #1C1B18;padding-top:4pt;font-size:8pt;" id="pdf-sig1"></div>
+    </div>
+    <div>
+      <div style="font-size:7.5pt;color:#8C8A82;margin-bottom:20pt;">Signature du/de la conjoint·e</div>
+      <div style="border-top:1px solid #1C1B18;padding-top:4pt;font-size:8pt;" id="pdf-sig2"></div>
+    </div>
+  </div>
+
+  <!-- Pied de page -->
+  <div class="pdf-footer">
+    <div>Document généré par Aurora — Application de gestion budgétaire personnelle</div>
+    <div id="pdf-footer-date"></div>
+  </div>
+
+</div><!-- /pdf-page -->
+</div><!-- /pdf-output -->
+
+<script>
+'use strict';
+const $ = id => document.getElementById(id);
+const LS_AURORA = 'aurora_v3';
+const LS_RAPPORT = 'aurora_rapport_v1';
+
+/* ── Données ── */
+let data = {
+  revenus: [{ label:'Salaire (vous)', freq:'monthly', amount:'' }, { label:'Salaire conjoint·e', freq:'monthly', amount:'' }, { label:'Allocations familiales', freq:'monthly', amount:'' }],
+  charges: [{ label:'Loyer', freq:'monthly', amount:'' }, { label:'3e pilier', freq:'monthly', amount:'' }, { label:'Assurance maladie', freq:'monthly', amount:'' }],
+  vie: [{ label:'Alimentation / courses', amount:'' }, { label:'Essence / transports', amount:'' }, { label:'Divers / imprévus', amount:'' }],
+  'factures-manual': [],
+};
+
+const FREQ_LABELS = { monthly:'Mensuelle', bimonthly:'Bimestrielle', quarterly:'Trimestrielle', yearly:'Annuelle' };
+const FREQ_MONTHLY = { monthly:1, bimonthly:.5, quarterly:1/3, yearly:1/12 };
+const PRIO_LABELS = { 1:'Urgent', 2:'Rappel', 3:'En cours', 4:'Plus tard' };
+const PRIO_COLORS = { 1:'p1', 2:'p2', 3:'p3', 4:'p4' };
+
+/* ════ INIT ════ */
+function init() {
+  // Date display
+  const now = new Date();
+  $('date-display').textContent = now.toLocaleDateString('fr-CH',{day:'2-digit',month:'long',year:'numeric'});
+
+  // Load saved data
+  try { const r=localStorage.getItem(LS_RAPPORT); if(r){ const d=JSON.parse(r); Object.assign(data,d); } } catch(e){}
+
+  // Load identity from saved
+  try {
+    const saved = JSON.parse(localStorage.getItem(LS_RAPPORT)||'{}');
+    ['nom1','nom2','adresse','ville','tel','email'].forEach(k=>{ if(saved['id-'+k]) $('id-'+k).value=saved['id-'+k]; });
+    if(saved.remarques) $('remarques').value=saved.remarques;
+  } catch(e){}
+
+  renderAll();
+  loadAuroraFactures();
+
+  // Auto-save on input
+  document.addEventListener('input', ()=>{ autoSave(); updateSummary(); });
+}
+
+function autoSave() {
+  const saved = {};
+  ['nom1','nom2','adresse','ville','tel','email'].forEach(k=>{ saved['id-'+k]=$('id-'+k)?.value||''; });
+  saved.remarques = $('remarques')?.value||'';
+  Object.assign(saved, data);
+  localStorage.setItem(LS_RAPPORT, JSON.stringify(saved));
+}
+
+/* ════ RENDER ROWS ════ */
+function renderAll() {
+  renderSection('revenus');
+  renderSection('charges');
+  renderSection('vie');
+  renderSection('factures-manual');
+  updateSummary();
+}
+
+function renderSection(key) {
+  const container = $(key+'-rows');
+  if(!container) return;
+  const hasFreq = key==='revenus'||key==='charges';
+  const hasPrio = key==='factures-manual';
+  const hasDate = key==='factures-manual';
+
+  container.innerHTML = (data[key]||[]).map((row,i)=>`
+  <div class="row" id="${key}-row-${i}">
+    <input type="text" class="w-name" placeholder="${hasFreq?'Libellé':hasPrio?'Créancier':'Poste'}"
+      value="${escHtml(row.label||row.nom||'')}"
+      oninput="updateRow('${key}',${i},'${hasPrio?'nom':'label'}',this.value)"/>
+    ${hasFreq?`<select class="w-freq" onchange="updateRow('${key}',${i},'freq',this.value)">
+      <option value="monthly" ${row.freq==='monthly'?'selected':''}>Mensuelle</option>
+      <option value="bimonthly" ${row.freq==='bimonthly'?'selected':''}>Bimestrielle</option>
+      <option value="quarterly" ${row.freq==='quarterly'?'selected':''}>Trimestrielle</option>
+      <option value="yearly" ${row.freq==='yearly'?'selected':''}>Annuelle</option>
+    </select>`:''}
+    ${hasDate?`<input type="date" style="width:110px;font-size:.78rem;padding:8px 8px;" value="${row.echeance||''}"
+      oninput="updateRow('${key}',${i},'echeance',this.value)"/>`:''}
+    ${hasPrio?`<select class="w-freq" onchange="updateRow('${key}',${i},'prio',+this.value)">
+      <option value="1" ${row.prio===1?'selected':''}>🔴 Urgent</option>
+      <option value="2" ${row.prio===2?'selected':''}>🟠 Rappel</option>
+      <option value="3" ${(row.prio===3||!row.prio)?'selected':''}>🟡 En cours</option>
+      <option value="4" ${row.prio===4?'selected':''}>⚪ Plus tard</option>
+    </select>`:''}
+    <input type="number" class="w-amount" placeholder="0.00" inputmode="decimal" step="0.01"
+      value="${row.amount||row.montant||''}"
+      oninput="updateRow('${key}',${i},'${hasPrio?'montant':'amount'}',parseFloat(this.value)||0)"/>
+    <button class="btn-del" onclick="delRow('${key}',${i})">✕</button>
+  </div>`).join('');
+}
+
+function addRow(key) {
+  if(!data[key]) data[key]=[];
+  if(key==='charges') data[key].push({label:'',freq:'monthly',amount:0});
+  else if(key==='revenus') data[key].push({label:'',freq:'monthly',amount:0});
+  else if(key==='factures-manual') data[key].push({nom:'',echeance:'',prio:3,montant:0});
+  else data[key].push({label:'',amount:0});
+  renderSection(key);
+}
+
+function delRow(key,i) {
+  data[key].splice(i,1); renderSection(key); updateSummary();
+}
+
+function updateRow(key,i,field,val) {
+  if(!data[key][i]) return;
+  data[key][i][field]=val;
+  updateSummary();
+}
+
+/* ════ AURORA DATA IMPORT ════ */
+function loadAuroraFactures() {
+  const container = $('factures-imported');
+  try {
+    const raw = localStorage.getItem(LS_AURORA);
+    if(!raw){ container.innerHTML=noAurora(); return; }
+    const aurora = JSON.parse(raw);
+    const unpaid = (aurora.factures||[]).filter(f=>!f.paid);
+    if(!unpaid.length){ container.innerHTML='<div style="font-size:.82rem;color:var(--ink3);padding:8px 0;">✓ Aucune facture en cours dans Aurora.</div>'; return; }
+    const sorted = [...unpaid].sort((a,b)=>(a.prio||3)-(b.prio||3));
+    container.innerHTML = sorted.map(f=>`
+    <div class="fac-imported">
+      <div>
+        <div class="fac-name">${escHtml(f.nom||f.creancier||'—')}</div>
+        <div class="fac-detail">
+          Échéance : ${f.echeance||'—'} · ${PRIO_LABELS[f.prio]||'En cours'}
+          ${f.ref?'· Réf: '+f.ref:''}
+        </div>
+      </div>
+      <div class="fac-amount">CHF ${fmtN(f.montant||0)}</div>
+    </div>`).join('');
+    // Store for PDF
+    window._auroraFactures = sorted;
+  } catch(e) { container.innerHTML=noAurora(); }
+}
+
+function noAurora() {
+  return `<div style="font-size:.82rem;color:var(--ink3);padding:8px 0;">
+    Aucune donnée Aurora trouvée sur cet appareil.<br/>
+    <small>Ouvrez d'abord l'app Aurora principale et ajoutez vos factures, puis revenez ici.</small>
+  </div>`;
+}
+
+/* ════ SUMMARY ════ */
+function totalSection(key) {
+  return (data[key]||[]).reduce((s,r)=>{
+    const amt = parseFloat(r.amount||r.montant||0)||0;
+    const ratio = FREQ_MONTHLY[r.freq]||1;
+    return s+amt*ratio;
+  },0);
+}
+
+function totalFactures() {
+  const aurora = (window._auroraFactures||[]).reduce((s,f)=>s+(parseFloat(f.montant)||0),0);
+  const manual = (data['factures-manual']||[]).reduce((s,f)=>s+(parseFloat(f.montant)||0),0);
+  return aurora+manual;
+}
+
+function updateSummary() {
+  const rev = totalSection('revenus');
+  const cha = totalSection('charges');
+  const vie = totalSection('vie');
+  const dispo = rev - cha - vie;
+  $('sum-revenus').textContent = 'CHF '+fmtN(rev);
+  $('sum-charges').textContent = 'CHF '+fmtN(cha+vie);
+  const dispEl = $('sum-disponible');
+  dispEl.textContent = 'CHF '+fmtN(dispo);
+  dispEl.className = 'sum-val '+(dispo>=0?'positive':'negative');
+}
+
+/* ════ PDF GENERATION ════ */
+function generatePDF() {
+  const nom1 = $('id-nom1').value.trim()||'—';
+  const nom2 = $('id-nom2').value.trim()||'—';
+  const adresse = $('id-adresse').value.trim()||'—';
+  const ville = $('id-ville').value.trim()||'—';
+  const tel = $('id-tel').value.trim()||'—';
+  const email = $('id-email').value.trim()||'—';
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('fr-CH',{day:'2-digit',month:'long',year:'numeric'});
+
+  // Dates & header
+  $('pdf-date').textContent = dateStr;
+  $('pdf-footer-date').textContent = dateStr;
+  $('pdf-contact-hdr').innerHTML = `${nom1} & ${nom2}<br/>${tel} — ${email}`;
+  $('pdf-sig1').textContent = nom1;
+  $('pdf-sig2').textContent = nom2;
+
+  // Identity grid
+  $('pdf-identity').innerHTML = `
+    <div class="pdf-id-box"><div class="pdf-id-label">Titulaire 1</div><div class="pdf-id-value">${nom1}</div></div>
+    <div class="pdf-id-box"><div class="pdf-id-label">Titulaire 2 / Conjoint·e</div><div class="pdf-id-value">${nom2}</div></div>
+    <div class="pdf-id-box"><div class="pdf-id-label">Adresse</div><div class="pdf-id-value">${adresse}</div></div>
+    <div class="pdf-id-box"><div class="pdf-id-label">Localité</div><div class="pdf-id-value">${ville}</div></div>
+    <div class="pdf-id-box"><div class="pdf-id-label">Téléphone</div><div class="pdf-id-value">${tel}</div></div>
+    <div class="pdf-id-box"><div class="pdf-id-label">Email</div><div class="pdf-id-value">${email}</div></div>`;
+
+  // ── Revenus
+  let revTotal = 0;
+  $('pdf-revenus-body').innerHTML = (data.revenus||[]).filter(r=>r.label&&r.amount).map(r=>{
+    const monthly = (parseFloat(r.amount)||0)*(FREQ_MONTHLY[r.freq]||1);
+    revTotal+=monthly;
+    return `<tr><td>${escHtml(r.label)}</td><td><span class="freq-badge">${FREQ_LABELS[r.freq]||''}</span></td><td class="right amount">CHF ${fmtN(monthly)}</td></tr>`;
+  }).join('');
+  $('pdf-total-revenus').textContent = 'CHF '+fmtN(revTotal);
+
+  // ── Charges fixes
+  let chaTotal = 0;
+  $('pdf-charges-body').innerHTML = (data.charges||[]).filter(r=>r.label&&r.amount).map(r=>{
+    const monthly = (parseFloat(r.amount)||0)*(FREQ_MONTHLY[r.freq]||1);
+    chaTotal+=monthly;
+    return `<tr><td>${escHtml(r.label)}</td><td><span class="freq-badge">${FREQ_LABELS[r.freq]||''}</span></td><td class="right amount">CHF ${fmtN(monthly)}</td></tr>`;
+  }).join('');
+  $('pdf-total-charges').textContent = 'CHF '+fmtN(chaTotal);
+
+  // ── Vie courante
+  let vieTotal = 0;
+  $('pdf-vie-body').innerHTML = (data.vie||[]).filter(r=>r.label&&r.amount).map(r=>{
+    const amt = parseFloat(r.amount)||0;
+    vieTotal+=amt;
+    return `<tr><td>${escHtml(r.label)}</td><td class="right amount">CHF ${fmtN(amt)}</td></tr>`;
+  }).join('');
+  $('pdf-total-vie').textContent = 'CHF '+fmtN(vieTotal);
+
+  // ── Factures
+  const auroraFacs = (window._auroraFactures||[]);
+  const manualFacs = (data['factures-manual']||[]).filter(f=>f.nom&&f.montant);
+  const allFacs = [...auroraFacs, ...manualFacs].sort((a,b)=>(a.prio||3)-(b.prio||3));
+  let facTotal = 0;
+  $('pdf-factures-body').innerHTML = allFacs.map(f=>{
+    const amt = parseFloat(f.montant||f.amount)||0;
+    facTotal+=amt;
+    const p = f.prio||3;
+    return `<tr>
+      <td><strong>${escHtml(f.nom||f.creancier||'—')}</strong>${f.ref?'<br/><span style="font-size:7.5pt;color:#8C8A82;">Réf: '+escHtml(f.ref)+'</span>':''}</td>
+      <td style="white-space:nowrap;">${f.echeance||'—'}</td>
+      <td><span class="prio-badge ${PRIO_COLORS[p]||'p3'}">${PRIO_LABELS[p]||'—'}</span></td>
+      <td class="right amount">CHF ${fmtN(amt)}</td>
+    </tr>`;
+  }).join('');
+  if(!allFacs.length) $('pdf-factures-body').innerHTML='<tr><td colspan="4" style="color:#8C8A82;font-size:8.5pt;">Aucune facture en cours.</td></tr>';
+  $('pdf-total-factures').textContent = 'CHF '+fmtN(facTotal);
+
+  // ── Summary
+  const dispo = revTotal - chaTotal - vieTotal;
+  $('pdf-sum-rev').textContent  = 'CHF '+fmtN(revTotal);
+  $('pdf-sum-cha').textContent  = 'CHF '+fmtN(chaTotal);
+  $('pdf-sum-vie2').textContent = 'CHF '+fmtN(vieTotal);
+  const dispoEl = $('pdf-disponible');
+  dispoEl.textContent = 'CHF '+fmtN(Math.abs(dispo));
+  dispoEl.className = 'pdf-disponible-amount '+(dispo>=0?'positive':'negative');
+  $('pdf-dispo-sub').textContent = dispo>=0
+    ? `Après revenus (${fmtN(revTotal)}) − charges fixes (${fmtN(chaTotal)}) − vie courante (${fmtN(vieTotal)})`
+    : `⚠ Déficit mensuel estimé — les dépenses dépassent les revenus de CHF ${fmtN(Math.abs(dispo))}`;
+
+  // ── Remarques
+  const rem = $('remarques').value.trim();
+  const remEl = $('pdf-remarques-text');
+  const remLines = $('pdf-remark-lines');
+  if(rem) {
+    remEl.textContent = rem;
+    remLines.innerHTML='';
+  } else {
+    remEl.textContent='';
+    remLines.innerHTML='<div class="pdf-remark-line"></div><div class="pdf-remark-line"></div><div class="pdf-remark-line"></div>';
+  }
+
+  // ── Print
+  setTimeout(()=>window.print(), 100);
+}
+
+function clearAll() {
+  if(!confirm('Effacer toutes les informations saisies dans ce formulaire ?')) return;
+  localStorage.removeItem(LS_RAPPORT);
+  data = {
+    revenus:[{label:'Salaire (vous)',freq:'monthly',amount:''},{label:'Salaire conjoint·e',freq:'monthly',amount:''},{label:'Allocations familiales',freq:'monthly',amount:''}],
+    charges:[{label:'Loyer',freq:'monthly',amount:''},{label:'3e pilier',freq:'monthly',amount:''},{label:'Assurance maladie',freq:'monthly',amount:''}],
+    vie:[{label:'Alimentation / courses',amount:''},{label:'Essence / transports',amount:''},{label:'Divers / imprévus',amount:''}],
+    'factures-manual':[],
+  };
+  ['nom1','nom2','adresse','ville','tel','email'].forEach(k=>$('id-'+k).value='');
+  $('remarques').value='';
+  renderAll();
+}
+
+/* ════ UTILS ════ */
+function fmtN(n) { return Number(n||0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,"'"); }
+function escHtml(s) { const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
+
+init();
+</script>
+</body>
+</html>
